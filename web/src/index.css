@@ -1,0 +1,49 @@
+body {
+  margin: 20px;
+  background: #fff;
+}
+
+span {
+  padding-left: 20px;
+  white-space:nowrap;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+.btn {
+  width: 100px;
+}
+.right {
+  float: right;
+}
+.map {
+  text-align: center;
+}
+
+
+.position {
+  background: #ddd;
+  border: 0px solid;
+  border-radius: 7px;
+  height: 100px;
+  width: 150px;
+  margin-left: 12px;
+  margin-right: 12px;
+}
+.position.full {
+  background: var(--bs-secondary);
+}
+.position.source {
+  background: var(--bs-success);
+}
+.position.target {
+  background: var(--bs-danger);
+}
+
+.position:hover {
+  outline: none;
+  border: 2px solid #ccc;
+}
+
+
