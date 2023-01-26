@@ -2,81 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import graph from './graph.json';
-
-function Mode(props) {
-  let change;
-  let mode;
-  let text;
-  let run;
-
-  switch(props.mode) {
-    case "setup":
-      change = <button type="button" className="btn change btn-primary" onClick={props.onChangeClick}>Next</button>
-      mode = <button type="button" className="btn btn-primary" disabled>Setup</button>
-      text = <span>1. Select initial plate positions</span>
-      run = <button type="button" className="btn run btn-outline-primary" disabled>Run</button>
-      break;
-    case "source":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Change</button>
-      mode = <button type="button" className="btn btn-success" disabled>Source</button>
-      text = <span>2. Select plate for pick up</span>
-      run = <button type="button" className="btn run btn-outline-dark" disabled>Run</button>
-      break;
-    case "target":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Cancel</button>
-      mode = <button type="button" className="btn btn-danger" disabled>Target</button>
-      text = <span>3. Select target position for plate</span>
-      run = <button type="button" className="btn run btn-outline-secondary" disabled>Run</button>
-      break;
-    case "ready":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Cancel</button>
-      mode = <button type="button" className="btn btn-warning" disabled>Ready</button>
-      text = <span>4. Press run to perform move</span>
-      run = <button type="button" className="btn run btn-warning" onClick={props.onRunClick}>Run</button>
-      break;
-    case "moving":
-      change = <button type="button" className="btn change btn-secondary" disabled>Cancel</button>
-      mode = <button type="button" className="btn btn-danger" disabled>Moving</button>
-      text = <span>5. Press abort to stop move</span>
-      run = <button type="button" className="btn run btn-danger"onClick={props.onRunClick}>Abort</button>
-      break;
-    default: break;
-  }
-
-  return (
-    <div className="section">
-      {mode}
-      {text}
-      <div className="btn-group right" role="group">
-        {change}
-        {run}
-      </div>
-    </div>
-  )
-}
-
-function Position(props) {
-  const className = props.id + " position " + props.plate;
-  return <button className={className} onClick={props.onClick}>{props.id}</button>
-}
-
-class Positions extends React.Component {
-  render() {
-    const plates = this.props.plates
-    return (
-      <div className="section map">
-        {Object.keys(plates).map( id => {
-          return <Position
-            key={id}
-            id={id}
-            plate={plates[id]}
-            onClick={() => this.props.handlePlateClick(id)}
-          />
-        })}
-      </div>
-    )
-  }
-}
+import Mode from './Components/Mode'
+import Positions from './Components/Positions'
+import Information from './Components/Information'
 
 // SYSTEM STATE MACHINE:
 
@@ -92,6 +20,7 @@ class System extends React.Component {
     }
 
     this.state = {
+      frame: "control", // control, dorna, flowbot
       mode: "setup", // setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
@@ -205,18 +134,58 @@ class System extends React.Component {
     this.setState({plates: plates})
   }
 
+  // const className = props.id + " position " + props.plate;
+  // return <button className={className} onClick={props.onClick}>{props.id}</button>
+  // frame: "control", // control, dorna, flowbot
+  // this.setState({mode: "target"});
+
   render() {
+    let content;
+    let controlLink, dornaLink, flowbotLink = "nav-link"
+
+
+    switch(this.state.frame) {
+      case("dorna"):
+        dornaLink = "nav-link active"
+        content = (
+          <iframe src="http://lab.dorna.ai/"/>
+        )
+        break;
+      case("control"):
+        controlLink = "nav-link active"
+        content = (
+          <div>
+            <Mode
+              mode={this.state.mode}
+              onChangeClick={() => this.handleChangeClick()}
+              onRunClick={() => this.handleRunClick()}
+            />
+            <Positions
+              plates={this.state.plates}
+              handlePlateClick={(id) => this.handlePlateClick(id)}
+            />
+            <Information mode={this.state.mode}/>
+          </div>
+        )
+        break;
+      case("flowbot"):
+        flowbotLink = "nav-link active"
+        content = (
+          <iframe src="https://portal.flow-robotics.com/login?next=%2Fapidocs%2Findex.html"/>
+        )
+        break;
+    }
+
     return (
       <div className="container">
-        <Mode
-          mode={this.state.mode}
-          onChangeClick={() => this.handleChangeClick()}
-          onRunClick={() => this.handleRunClick()}
-        />
-        <Positions
-          plates={this.state.plates}
-          handlePlateClick={(id) => this.handlePlateClick(id)}
-        />
+        {content}
+        <nav className="navbar fixed-bottom bg-light">
+          <div className="container-fluid">
+            <a className={dornaLink} href="#" onClick={() => this.setState({frame: "dorna"})}>Dorna lab</a>
+            <a className={controlLink} href="#" onClick={() => this.setState({frame: "control"})}>Automation control</a>
+            <a className={flowbotLink} href="#" onClick={() => this.setState({frame: "flowbot"})}>Flowbot</a>
+          </div>
+        </nav>
       </div>
     );
   }
