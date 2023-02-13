@@ -9,14 +9,14 @@ def prepare(r):
 
 # Grip microplate
 def grip(r):
-    kwargs = {"cmd": "pwm", pwm: 1, freq: 50, duty: 8.8}
+    kwargs = {"cmd": "pwm", pwm: 1, freq: 50, duty: 7.8}
     status = r.play(**kwargs)
     r.sleep(0.5)
     return status
 
 # Release microplate
 def release(r):
-    kwargs = {"cmd": "pwm", pwm: 1, freq: 50, duty: 10}
+    kwargs = {"cmd": "pwm", pwm: 1, freq: 50, duty: 9}
     status = r.play(**kwargs)
     r.sleep(0.5)
     return status
