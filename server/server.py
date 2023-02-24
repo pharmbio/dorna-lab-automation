@@ -5,10 +5,7 @@ import networkx as nx
 import socket
 import json
 
-plot = False
-try:
-    import matplotlib.pyplot as plt
-    plot = True
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
