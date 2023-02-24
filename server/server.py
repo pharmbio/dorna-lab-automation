@@ -74,7 +74,6 @@ def closestNode(robot, graph):
 
 def main(file):
     hostname = socket.gethostname()
-    hostname = "lab4"
 
     g = createGraph(hostname, "../graph.json")
 
