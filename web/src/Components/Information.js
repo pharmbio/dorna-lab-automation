@@ -18,12 +18,13 @@ export default function Information(props) {
           <li>Verify progress with TA...</li>
         </ol>
         <ul>
-	  <li>Move to a plate position using the selector above and Move button below.</li>
-          <li>Change to Dorna Lab, and make adjustments to the position.</li>
+	  <li>Move to a plate position using the selector above and Move button below</li>
+          <li>Change to Dorna Lab, make sure Discrete Jog Mode is turned on and in the 1-5mm range</li>
+          <li>Make adjustments to the position</li>
           <li>Test calibration with Test</li>
           <li>Pick up plate with Pickup</li>
           <li>Place plate with Place</li>
-          <li>When happy with a position, click Save and move to the next.</li>
+          <li>When happy with a position, click Save and move to the next</li>
         </ul>
 	<div className="row">
           <button type="button" className="btn btn-primary"   onClick={props.handleMoveClick}>Move</button>
