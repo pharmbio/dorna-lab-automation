@@ -69,5 +69,5 @@
         ["a", "b"],
         ["b", "4"]
     ],
-    "positions": ["f1", "f2", "f3", "m"]
+    "positions": ["safe","safe", "f1", "f2", "f3", "m"]
 }
