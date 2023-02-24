@@ -74,6 +74,7 @@ def closestNode(robot, graph):
 
 def main(file):
     hostname = socket.gethostname()
+    hostname = "lab1"
 
     g = createGraph(hostname, "../graph.json")
 
@@ -178,8 +179,7 @@ def main(file):
 
         filename = "calibration.json"
 
-        with open(filename, "a+") as file:
-            file.seek(0)
+        with open(filename, "r+") as file:
             try:
                 data = json.load(file)
             except:

@@ -60,7 +60,7 @@ class System extends React.Component {
       })
     fetch("http://localhost:5000/calibrate")
       .then(res => {
-	      console.log(res)
+        console.log(res)
       })
   }
 
@@ -206,7 +206,7 @@ class System extends React.Component {
               plates={this.state.plates}
               handlePlateClick={(id) => this.handlePlateClick(id)}
             />
-            <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()}/>
+            <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()} handleSaveClick={() => this.savePosition()}/>
           </div>
         )
         break;
