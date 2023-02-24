@@ -92,6 +92,13 @@ class System extends React.Component {
       .then(data => console.log(data))
   }
 
+  calibrate() {
+    fetch("http://localhost:5000/calibrate")
+      .then(response => response.json())
+      .then(data => console.log(data))
+  }
+	  k
+
   resetPlates() {
     const initial = structuredClone(this.state.initial);
     this.setState({plates: initial});
@@ -101,6 +108,7 @@ class System extends React.Component {
     switch(this.state.mode) {
       case "preflight":
 	this.setState({mode: "setup"})
+	this.calibrate()
 	break;
       case "setup":
         const plates = structuredClone(this.state.plates);
