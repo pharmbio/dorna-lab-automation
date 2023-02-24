@@ -16,6 +16,10 @@ span {
   white-space:nowrap;
 }
 
+#container {
+  margin: 0 auto;
+}
+
 .section {
   margin-bottom: 30px;
 }
@@ -29,6 +33,9 @@ span {
   text-align: center;
 }
 
+.btn {
+  margin: 4px;
+}
 
 .position {
   background: #ddd;

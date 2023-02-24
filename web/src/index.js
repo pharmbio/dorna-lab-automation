@@ -99,6 +99,9 @@ class System extends React.Component {
 
   handleChangeClick() {
     switch(this.state.mode) {
+      case "preflight":
+	this.setState({mode: "setup"})
+	break;
       case "setup":
         const plates = structuredClone(this.state.plates);
         this.setState({initial: plates})

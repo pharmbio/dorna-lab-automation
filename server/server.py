@@ -2,9 +2,13 @@ from flask import Flask, request, jsonify
 from dorna2 import Dorna
 from helper import *
 import networkx as nx
-import matplotlib.pyplot as plt
 import socket
 import json
+
+plot = False
+try:
+    import matplotlib.pyplot as plt
+    plot = True
 
 app = Flask(__name__)
 
@@ -132,8 +136,8 @@ def main(file):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, 200
 
-    @app.get("/close")
-    def close():
+    @app.get("/testcalibration")
+    def testcalibration():
         prepare(r)
         status = r.jmove(rel=1, z=-10)
         r.sleep(3)
@@ -167,14 +171,6 @@ def main(file):
         # r.set_motor(0)
         r.close()
         return "Robot turned off!", 200
-
-    @app.get("/draw")
-    def draw():
-        nx.draw(g, with_labels=True)
-        plt.show()
-        plt.savefig("graph.png", format="PNG")
-        plt.close()
-        return 'Success', 200
 
     @app.get("/save")
     def save():
@@ -219,12 +215,16 @@ def main(file):
 
         return "Read calibration file and updated coordinates", 200
 
-
-    @app.get("/test")
-    def test():
-        node = closestNode(r, g)
-        return node, 200
-
+    @app.get("/draw")
+    def draw():
+        if plot is True:
+            nx.draw(g, with_labels=True)
+            plt.show()
+            plt.savefig("graph.png", format="PNG")
+            plt.close()
+            return 'Success', 200
+        else:
+            return 'Matplotlib not installed', 300
 
     app.run(debug=True)
 

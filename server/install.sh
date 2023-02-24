@@ -15,4 +15,5 @@ cd dorna2-python
 python setup.py install --force
 cd ..
 
-
+# Use pip to install python dependencies
+pip install -r requirements.txt
