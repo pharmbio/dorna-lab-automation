@@ -2,19 +2,20 @@ from flask import Flask, request, jsonify
 from dorna2 import Dorna
 from helper import *
 import networkx as nx
+import matplotlib.pyplot as plt
 import socket
 import json
 
 app = Flask(__name__)
 
-def createGraph(file):
+def createGraph(hostname, file):
     g = nx.Graph()
     n, e = [], []
 
     with open (file, "r") as json_file:
         data = json.load(json_file)
         jnodes = data["joint nodes"]
-        lnodes = data["linear nodes"]
+        lnodes = data["linear nodes"][hostname]
         edges = data["edges"]
 
         for i in jnodes:
@@ -71,9 +72,10 @@ def closestNode(robot, graph):
 
 
 def main(file):
-    g = createGraph("../graph.json")
-
     hostname = socket.gethostname()
+    hostname = "lab4"
+
+    g = createGraph(hostname, "../graph.json")
 
     with open(file) as json_file:
         arg = json.load(json_file)
@@ -130,6 +132,16 @@ def main(file):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, 200
 
+    @app.get("/close")
+    def close():
+        prepare(r)
+        status = r.jmove(rel=1, z=-10)
+        r.sleep(3)
+        status = r.jmove(rel=1, z=10)
+        response = jsonify("Calibration test", str(status))
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 200
+
     @app.get("/halt")
     def halt():
         status = r.halt()
@@ -163,6 +175,50 @@ def main(file):
         plt.savefig("graph.png", format="PNG")
         plt.close()
         return 'Success', 200
+
+    @app.get("/save")
+    def save():
+        node = request.args.get("node")
+        if not node:
+            return "No node specified for calibration...\n", 400
+        x, y, z, a, b, *_ = r.get_all_pose()
+        coordinates = [x, y, z, a, b]
+
+        filename = "calibration.json"
+
+        with open(filename, "a+") as file:
+            file.seek(0)
+            try:
+                data = json.load(file)
+            except:
+                data = {}
+        
+        if not data.get(node):
+            data[node] = []
+        data[node].append(coordinates)
+
+        with open(filename, 'w') as file:
+            json.dump(data, file, indent=4)
+
+        return "Calibrated " + node + " successfully!", 200
+
+    @app.get("/calibrate")
+    def calibrate():
+        filename = "calibration.json"
+        with open(filename, "a+") as file:
+            file.seek(0)
+            data = json.load(file)
+
+        for node in list(g.nodes):
+            print(node, g.nodes[node])
+            if data.get(node):
+                new = data[node][-1]
+                g.nodes[node]["coordinates"] = new
+                print("updated " + node)
+                print(node, g.nodes[node])
+
+        return "Read calibration file and updated coordinates", 200
+
 
     @app.get("/test")
     def test():

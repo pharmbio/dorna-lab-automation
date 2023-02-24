@@ -21,7 +21,7 @@ class System extends React.Component {
 
     this.state = {
       frame: "control", // control, dorna, flowbot
-      mode: "setup", // setup, source, target, ready, moving
+      mode: "preflight", // preflight, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
     }
@@ -37,6 +37,27 @@ class System extends React.Component {
       initial: initial,
       plates: plates
     })
+  }
+
+  simpleMove() {
+    const plates = this.state.plates;
+    const target = Object.keys(plates).find(key => plates[key] === "full");
+    console.log("Moving to " + target);
+		
+    fetch("http://localhost:5000/move?target="+target)
+      .then(res => {
+        console.log(res)
+      })
+  }
+
+  savePosition() {
+    const plates = this.state.plates;
+    const target = Object.keys(plates).find(key => plates[key] === "full");
+    console.log("Updated " + target + " with new coordinates. Written to calibration.json")
+    fetch("http://localhost:5000/save?node="+target)
+      .then(res => {
+        console.log(res)
+      })
   }
 
   requestMove() {
@@ -116,6 +137,13 @@ class System extends React.Component {
   handlePlateClick(id) {
     const plates = this.state.plates;
     switch(this.state.mode) {
+      case "preflight": 
+        Object.keys(plates).forEach((item) => {
+	  plates[item] = "empty"
+	  plates[id] = "full"
+	})
+	console.log(plates)
+	break;
       case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
       case "source":
         if (plates[id] === "full") {
@@ -164,7 +192,7 @@ class System extends React.Component {
               plates={this.state.plates}
               handlePlateClick={(id) => this.handlePlateClick(id)}
             />
-            <Information mode={this.state.mode}/>
+            <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()}/>
           </div>
         )
         break;

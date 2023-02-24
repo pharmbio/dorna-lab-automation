@@ -1,21 +1,37 @@
 export default function Information(props) {
   const mode = props.mode
 
-  let setup = (
+  let preflight = (
     <div className="bg-light p-5 rounded">
       <h1>Preflight checklist</h1>
-      <p className="lead">
-        <ul>
-          <li> hello </li>
-          <li> hello </li>
-          <button type="button" class="btn btn-info">Calibrate</button>
-        </ul>
-      </p>
+      <div className="lead">
+        <ol>
+          <li>Open flowbot door _completely_!</li>
+          <li>Move microscope to its loading position.</li>
+          <li>Place a test plate in microscope.</li>
+          <li>Turn on Dorna control box.</li>
+          <li>Mount plexiglass shield around the workbench.</li>
+          <li>Verify progress with TA.</li>
+        </ol>
+          <ul>
+            <li>Move to a plate position using the selector above and Move button below.</li>
+            <li>Change to Dorna Lab, and make adjustments to the position.</li>
+            <li>Test calibration with Test</li>
+            <li>Pick up plate with Pickup</li>
+            <li>Place plate with Place</li>
+            <li>When happy with a position, click Save and move to the next.</li>
+          </ul>
+	  <button type="button" className="btn btn-primary" onClick={props.handleMoveClick}>Move</button>
+	  <button type="button" className="btn btn-secondary" >Test</button>
+	  <button type="button" className="btn btn-secondary" >Pickup</button>
+	  <button type="button" className="btn btn-secondary" onClick={() => window.fetch("http://localhost:5000/place").then(res => console.log(res))}>Place</button>
+	  <button type="button" className="btn btn-secondary" onClick={props.handleSaveClick}>Save</button>
+      </div>
     </div>
   )
 
   switch(props.mode) {
-    case "setup":
-      return setup
+    case "preflight":
+      return preflight
   }
 }

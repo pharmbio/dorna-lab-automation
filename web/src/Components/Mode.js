@@ -5,6 +5,12 @@ export default function Mode(props) {
   let run;
 
   switch(props.mode) {
+    case "preflight":
+      change = <button type="button" className="btn change btn-dark" onClick={props.onChangeClick} disabled>Next</button>
+      mode = <button type="button" className="btn btn-dark" disabled>Preflight</button>
+      text = <span>0. Start and complete checklist.</span>
+      run = <button type="button" className="btn run btn-outline-dark" disabled>Run</button>
+      break;
     case "setup":
       change = <button type="button" className="btn change btn-primary" onClick={props.onChangeClick}>Next</button>
       mode = <button type="button" className="btn btn-primary" disabled>Setup</button>
