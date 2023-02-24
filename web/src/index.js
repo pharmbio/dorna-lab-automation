@@ -58,6 +58,10 @@ class System extends React.Component {
       .then(res => {
         console.log(res)
       })
+    fetch("http://localhost:5000/calibrate")
+      .then(res => {
+	      console.log(res)
+      })
   }
 
   requestMove() {
@@ -97,7 +101,6 @@ class System extends React.Component {
       .then(response => response.json())
       .then(data => console.log(data))
   }
-	  k
 
   resetPlates() {
     const initial = structuredClone(this.state.initial);
