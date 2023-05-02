@@ -20,7 +20,6 @@ class System extends React.Component {
     }
 
     this.state = {
-      frame: "control", // control, dorna, flowbot
       mode: "preflight", // preflight, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
@@ -185,49 +184,24 @@ class System extends React.Component {
     let content;
     let controlLink, dornaLink, flowbotLink = "nav-link"
 
-
-    switch(this.state.frame) {
-      case("dorna"):
-        dornaLink = "nav-link active"
-        content = (
-          <iframe src="http://lab.dorna.ai/"/>
-        )
-        break;
-      case("control"):
-        controlLink = "nav-link active"
-        content = (
-          <div>
-            <Mode
-              mode={this.state.mode}
-              onChangeClick={() => this.handleChangeClick()}
-              onRunClick={() => this.handleRunClick()}
-            />
-            <Positions
-              plates={this.state.plates}
-              handlePlateClick={(id) => this.handlePlateClick(id)}
-            />
-            <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()} handleSaveClick={() => this.savePosition()}/>
-          </div>
-        )
-        break;
-      case("flowbot"):
-        flowbotLink = "nav-link active"
-        content = (
-          <iframe src="https://portal.flow-robotics.com/login?next=%2Fapidocs%2Findex.html"/>
-        )
-        break;
-    }
+    content = (
+      <div>
+        <Mode
+          mode={this.state.mode}
+          onChangeClick={() => this.handleChangeClick()}
+          onRunClick={() => this.handleRunClick()}
+        />
+        <Positions
+          plates={this.state.plates}
+          handlePlateClick={(id) => this.handlePlateClick(id)}
+        />
+        <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()} handleSaveClick={() => this.savePosition()}/>
+      </div>
+    )
 
     return (
       <div className="container">
         {content}
-        <nav className="navbar fixed-bottom bg-light">
-          <div className="container-fluid">
-            <a className={dornaLink} href="#" onClick={() => this.setState({frame: "dorna"})}>Dorna lab</a>
-            <a className={controlLink} href="#" onClick={() => this.setState({frame: "control"})}>Automation control</a>
-            <a className={flowbotLink} href="#" onClick={() => this.setState({frame: "flowbot"})}>Flowbot</a>
-          </div>
-        </nav>
       </div>
     );
   }
