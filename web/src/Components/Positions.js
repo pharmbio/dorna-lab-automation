@@ -15,7 +15,7 @@ export default class Positions extends React.Component {
             key={id}
             id={id}
             plate={plates[id]}
-            onClick={() => this.props.handlePlateClick(id)}
+            onClick={() => this.props.onPlateClick(id)}
           />
         })}
       </div>
