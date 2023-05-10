@@ -18,8 +18,8 @@ export default class Header extends React.Component {
     };
 
     const text = {
-      preflight:    "Perform calibration.",
-      calibration:  "calibration",
+      preflight:    "Go through preflight checklist and make sure each point is understood.",
+      calibration:  "Use the Dorna GUI below to calibrate each position.",
       setup:        "Select initial plate position.",
       source:       "Select plate for pick up.",
       target:       "Select target position for plate.",
@@ -28,27 +28,27 @@ export default class Header extends React.Component {
     };
 
     return (
-      <>
-      <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        <ul className="nav nav-pills">
-          {headerModes.map( mode => {
-            let active = mode==simplifiedMode[this.props.mode]
-            let className="nav-link " + (active ? "active" : "")
-            let title = mode.charAt(0).toUpperCase() + mode.slice(1);
-            return (
-              <li key={mode} className="nav-item">
-                <a href="#" className={className} onClick={() => this.props.onHeaderClick(mode)}>
-                  {headerModes.indexOf(mode)}. {title}
-                </a>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-      <div className="span text-center">
-        {text[this.props.mode]}
+      <div className="container bg-light">
+        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+          <ul className="nav nav-pills">
+            {headerModes.map( mode => {
+              let active = mode==simplifiedMode[this.props.mode]
+              let className="nav-link " + (active ? "active" : "")
+              let title = mode.charAt(0).toUpperCase() + mode.slice(1);
+              return (
+                <li key={mode} className="nav-item">
+                  <a href="#" className={className} onClick={() => this.props.onHeaderClick(mode)}>
+                    {headerModes.indexOf(mode)}. {title}
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+        <div className="span text-center">
+          {text[this.props.mode]}
+        </div>
       </div>
-      </>
     )
   }
 }
