@@ -1,7 +1,5 @@
-export default function Information(props) {
-  const mode = props.mode
-
-  let preflight = (
+export default function Preflight(props) {
+  return (
     <div className="bg-light p-5 rounded">
       <h1>Preflight checklist</h1>
       <div className="container">
@@ -18,7 +16,7 @@ export default function Information(props) {
           <li>Verify progress with TA...</li>
         </ol>
         <ul>
-	  <li>Move to a plate position using the selector above and Move button below</li>
+          <li>Move to a plate position using the selector above and Move button below</li>
           <li>Change to Dorna Lab, make sure Discrete Jog Mode is turned on and in the 1-5mm range</li>
           <li>Make adjustments to the position</li>
           <li>Test calibration with Test</li>
@@ -26,19 +24,14 @@ export default function Information(props) {
           <li>Place plate with Place</li>
           <li>When happy with a position, click Save and move to the next</li>
         </ul>
-	<div className="row">
+        <div className="row">
           <button type="button" className="btn btn-primary"   onClick={props.handleMoveClick}>Move</button>
           <button type="button" className="btn btn-secondary" onClick={() => window.fetch("http://localhost:5000/testcalibration").then(res => console.log(res))}>Test</button>
           <button type="button" className="btn btn-secondary" onClick={() => window.fetch("http://localhost:5000/pickup").then(res => console.log(res))}>Pickup</button>
           <button type="button" className="btn btn-secondary" onClick={() => window.fetch("http://localhost:5000/place").then(res => console.log(res))}>Place</button>
           <button type="button" className="btn btn-success" onClick={props.handleSaveClick}>Save</button>
-	</div>
+        </div>
       </div>
     </div>
   )
-
-  switch(props.mode) {
-    case "preflight":
-      return preflight
-  }
 }

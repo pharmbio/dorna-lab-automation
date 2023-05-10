@@ -17,50 +17,38 @@ export default class Header extends React.Component {
       moving:       "ready"
     };
 
-    let text;
-
-    switch(this.props.mode) {
-      case "preflight":
-        text = <span>0. Start and complete checklist.</span>
-        break;
-      case "calibration":
-        text = <span>1. Perform calibration.</span>
-        break;
-      case "setup":
-        text = <span>1. Perform calibration.</span>
-        break;
-      case "source":
-        text = <span>1. Perform calibration.</span>
-        break;
-      case "target":
-        text = <span>1. Perform calibration.</span>
-        break;
-      case "ready":
-        text = <span>1. Perform calibration.</span>
-        break;
-      case "moving":
-        text = <span>1. Perform calibration.</span>
-        break;
-      default: break;
-    }
+    const text = {
+      preflight:    "Perform calibration.",
+      calibration:  "calibration",
+      setup:        "Select initial plate position.",
+      source:       "Select plate for pick up.",
+      target:       "Select target position for plate.",
+      ready:        "Press run to perform move.",
+      moving:       "Press abort to stop move."
+    };
 
     return (
-      <div className="section">
+      <>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <ul className="nav nav-pills">
           {headerModes.map( mode => {
             let active = mode==simplifiedMode[this.props.mode]
             let className="nav-link " + (active ? "active" : "")
+            let title = mode.charAt(0).toUpperCase() + mode.slice(1);
             return (
               <li key={mode} className="nav-item">
                 <a href="#" className={className} onClick={() => this.props.onHeaderClick(mode)}>
-                  {headerModes.indexOf(mode)}. {mode}  
+                  {headerModes.indexOf(mode)}. {title}
                 </a>
               </li>
             )
           })}
         </ul>
-        {text}
+      </nav>
+      <div className="span text-center">
+        {text[this.props.mode]}
       </div>
+      </>
     )
   }
 }

@@ -1,17 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import graph from './graph.json';
-import Mode from './Components/Mode'
+
+import Header from './Components/Header'
 import Positions from './Components/Positions'
-import Information from './Components/Information'
+import Content from './Components/Content'
+
+import graph from './graph.json';
 
 // SYSTEM STATE MACHINE:
-
 class System extends React.Component {
   constructor(props) {
     super(props);
 
+    // Collected from graph.json
     const positions = graph.positions
     const obj = {};
 
@@ -20,7 +22,7 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "preflight", // preflight, setup, source, target, ready, moving
+      mode: "calibration", // preflight, calibration, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
     }
@@ -106,6 +108,18 @@ class System extends React.Component {
     this.setState({plates: initial});
   }
 
+  handleHeaderClick(mode) {
+    const defaultMode = {
+      preflight:    "preflight",
+      calibration:  "calibration",
+      setup:        "setup",
+      move:         "source",
+      ready:        "ready",
+    };
+    console.log(this.state.mode + " ==> " + mode)
+    this.setState({mode: defaultMode[mode]})
+  }
+
   handleChangeClick() {
     switch(this.state.mode) {
       case "preflight":
@@ -155,7 +169,6 @@ class System extends React.Component {
 	  plates[item] = "empty"
 	  plates[id] = "full"
 	})
-	console.log(plates)
 	break;
       case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
       case "source":
@@ -181,27 +194,25 @@ class System extends React.Component {
   // this.setState({mode: "target"});
 
   render() {
-    let content;
-    let controlLink, dornaLink, flowbotLink = "nav-link"
-
-    content = (
-      <div>
-        <Mode
-          mode={this.state.mode}
-          onChangeClick={() => this.handleChangeClick()}
-          onRunClick={() => this.handleRunClick()}
-        />
-        <Positions
-          plates={this.state.plates}
-          handlePlateClick={(id) => this.handlePlateClick(id)}
-        />
-        <Information mode={this.state.mode} handleMoveClick={() => this.simpleMove()} handleSaveClick={() => this.savePosition()}/>
-      </div>
-    )
-
     return (
-      <div className="container">
-        {content}
+      <div>
+        <div className="container">
+          <Header
+            mode={this.state.mode}
+            onHeaderClick={(mode) => this.handleHeaderClick(mode)}
+          />
+        </div>
+
+        <div className="container-fluid">
+          <Positions
+            plates={this.state.plates}
+            onPlateClick={(id) => this.handlePlateClick(id)}
+          />
+        </div>
+
+        <div className="container-fluid">
+          <Content mode={this.state.mode}/>
+        </div>
       </div>
     );
   }

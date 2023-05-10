@@ -9,7 +9,7 @@ export default class Positions extends React.Component {
   render() {
     const plates = this.props.plates
     return (
-      <div className="section map">
+      <div className="map">
         {Object.keys(plates).map( id => {
           return <Position
             key={id}

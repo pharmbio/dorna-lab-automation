@@ -1,55 +1,25 @@
-import Mode from './Components/Mode'
-import Positions from './Components/Positions'
-import Information from './Components/Information'
+import Preflight from './Components/Preflight'
+import Calibration from './Components/Calibration'
+import Setup from './Components/Setup'
+import Move from './Components/Move'
+import Ready from './Components/Ready'
 
-export default function Mode(props) {
-  let change;
-  let mode;
-  let text;
-  let run;
-
+function Information(props) {
   switch(props.mode) {
-    case "setup":
-      change = <button type="button" className="btn change btn-primary" onClick={props.onChangeClick}>Next</button>
-      mode = <button type="button" className="btn btn-primary" disabled>Setup</button>
-      text = <span>1. Select initial plate positions</span>
-      run = <button type="button" className="btn run btn-outline-primary" disabled>Run</button>
-      break;
-    case "source":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Change</button>
-      mode = <button type="button" className="btn btn-success" disabled>Source</button>
-      text = <span>2. Select plate for pick up</span>
-      run = <button type="button" className="btn run btn-outline-dark" disabled>Run</button>
-      break;
-    case "target":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Cancel</button>
-      mode = <button type="button" className="btn btn-danger" disabled>Target</button>
-      text = <span>3. Select target position for plate</span>
-      run = <button type="button" className="btn run btn-outline-secondary" disabled>Run</button>
-      break;
-    case "ready":
-      change = <button type="button" className="btn change btn-secondary" onClick={props.onChangeClick}>Cancel</button>
-      mode = <button type="button" className="btn btn-warning" disabled>Ready</button>
-      text = <span>4. Press run to perform move</span>
-      run = <button type="button" className="btn run btn-warning" onClick={props.onRunClick}>Run</button>
-      break;
-    case "moving":
-      change = <button type="button" className="btn change btn-secondary" disabled>Cancel</button>
-      mode = <button type="button" className="btn btn-danger" disabled>Moving</button>
-      text = <span>5. Press abort to stop move</span>
-      run = <button type="button" className="btn run btn-danger"onClick={props.onRunClick}>Abort</button>
-      break;
-    default: break;
+    case "preflight": return <Preflight/>; break;
+    case "calibration": return <Calibration/>; break;
+    case "setup": return <Setup/>; break;
+    case "source": return <Move/>; break;
+    case "target": return <Move/>; break;
+    case "ready": return <Ready/>; break;
+    default:
   }
+}
 
+export default function Content(props) {
   return (
     <div className="section">
-      {mode}
-      {text}
-      <div className="btn-group right" role="group">
-        {change}
-        {run}
-      </div>
+      <Information mode={props.mode}/>
     </div>
   )
 }
