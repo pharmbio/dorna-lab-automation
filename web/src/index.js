@@ -120,32 +120,6 @@ class System extends React.Component {
     this.setState({mode: defaultMode[mode]})
   }
 
-  handleChangeClick() {
-    switch(this.state.mode) {
-      case "preflight":
-	this.setState({mode: "setup"})
-	this.calibrate()
-	break;
-      case "setup":
-        const plates = structuredClone(this.state.plates);
-        this.setState({initial: plates})
-        this.setState({mode: "source"});
-        break;
-      case "source":
-        this.setState({mode: "setup"});
-        this.resetPlates();
-        break;
-      case "target":
-        this.setState({mode: "source"});
-        this.resetPlates();
-        break;
-      case "ready":
-        this.setState({mode: "source"});
-        this.resetPlates();
-        break;
-      default: break;
-    }
-  }
 
   handleRunClick() {
     switch(this.state.mode) {
@@ -188,6 +162,78 @@ class System extends React.Component {
     this.setState({plates: plates})
   }
 
+  handlePrevClick() {
+    switch(this.state.mode) {
+      case "preflight":
+        console.log("already at first stage");
+        break;
+      case "calibration":
+        this.setState({mode: "preflight"});
+        break;
+      case "setup":
+        this.setState({mode: "calibration"});
+        break;
+      case "source":
+        this.setState({mode: "setup"});
+        break;
+      case "target":
+        this.setState({mode: "setup"});
+        break;
+      case "ready":
+        this.setState({mode: "move"});
+        break;
+    }
+  }
+
+  handleNextClick() {
+    switch(this.state.mode) {
+      case "preflight":
+        this.setState({mode: "calibration"});
+        break;
+      case "calibration":
+        this.setState({mode: "setup"});
+        break;
+      case "setup":
+        this.setState({mode: "source"});
+        break;
+      case "source":
+        this.setState({mode: "ready"});
+        break;
+      case "target":
+        this.setState({mode: "ready"});
+        break;
+      case "ready":
+        console.log("already at last stage");
+        break;
+    }
+  }
+
+  handleChangeClick() {
+    switch(this.state.mode) {
+      case "preflight":
+	this.setState({mode: "setup"})
+	this.calibrate()
+	break;
+      case "setup":
+        const plates = structuredClone(this.state.plates);
+        this.setState({initial: plates})
+        this.setState({mode: "source"});
+        break;
+      case "source":
+        this.setState({mode: "setup"});
+        this.resetPlates();
+        break;
+      case "target":
+        this.setState({mode: "source"});
+        this.resetPlates();
+        break;
+      case "ready":
+        this.setState({mode: "source"});
+        this.resetPlates();
+        break;
+      default: break;
+    }
+  }
   // const className = props.id + " position " + props.plate;
   // return <button className={className} onClick={props.onClick}>{props.id}</button>
   // frame: "control", // control, dorna, flowbot
@@ -200,7 +246,8 @@ class System extends React.Component {
           <Header
             mode={this.state.mode}
             onHeaderClick={(mode) => this.handleHeaderClick(mode)}
-            onNextClick={() => this.handleChangeClick()}
+            onPrevClick={() => this.handlePrevClick()}
+            onNextClick={() => this.handleNextClick()}
           />
         </div>
 
