@@ -7,17 +7,7 @@ import Ready from './Components/Ready'
 function Controls(props) {
   switch(props.mode) {
     case "preflight": 
-      return (
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-          <ul class="navbar-nav">
-          </ul>
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <button type="button" className="btn btn-dark" onClick={props.handleNextClick}>Next</button>
-            </li>
-          </ul>
-        </nav>
-      )
+      return <></>
       break;
     case "calibration":
       return (
@@ -30,7 +20,7 @@ function Controls(props) {
               <button type="button" className="btn btn-primary" onClick={props.handleNextClick}>Save</button>
             </li>
           </ul>
-          <ul class="navbar-nav ms-auto">
+          <ul class="navbar-nav">
             <li class="nav-item">
               <button type="button" className="btn btn-dark" onClick={props.handleNextClick}>Next</button>
             </li>
@@ -70,6 +60,10 @@ function Information(props) {
   switch(props.mode) {
     case "preflight": return <Preflight/>; break;
     case "calibration": return <Calibration/>; break;
+    case "setup": return <Calibration/>; break;
+    case "source": return <Calibration/>; break;
+    case "target": return <Calibration/>; break;
+    case "ready": return <Calibration/>; break;
     default: break;
   }
 }

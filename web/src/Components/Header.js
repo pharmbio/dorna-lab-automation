@@ -29,21 +29,30 @@ export default class Header extends React.Component {
 
     return (
       <div className="container bg-light">
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-          <ul className="nav nav-pills">
-            {headerModes.map( mode => {
-              let active = mode==simplifiedMode[this.props.mode]
-              let className="nav-link " + (active ? "active" : "")
-              let title = mode.charAt(0).toUpperCase() + mode.slice(1);
-              return (
-                <li key={mode} className="nav-item">
-                  <a href="#" className={className} onClick={() => this.props.onHeaderClick(mode)}>
-                    {headerModes.indexOf(mode)}. {title}
-                  </a>
-                </li>
-              )
-            })}
-          </ul>
+        <nav className="navbar navbar-expand-md navbar-light">
+          <div className="container-fluid">
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarCollapse">
+              <button className="btn btn-outline-danger me-auto" onClick={() => this.props.onPrevClick()}>Previous</button>
+              <ul className="navbar-nav me-auto">
+                {headerModes.map( mode => {
+                  let active = mode==simplifiedMode[this.props.mode]
+                  let className="nav-link " + (active ? "active" : "")
+                  let title = mode.charAt(0).toUpperCase() + mode.slice(1);
+                  return (
+                    <li key={mode} className="nav-item">
+                      <a href="#" className={className} onClick={() => this.props.onHeaderClick(mode)}>
+                        {headerModes.indexOf(mode)+1}. {title}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+              <button className="btn btn-outline-primary" onClick={() => this.props.onNextClick()}>Next</button>
+            </div>
+          </div>
         </nav>
         <div className="span text-center">
           {text[this.props.mode]}

@@ -22,7 +22,7 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "calibration", // preflight, calibration, setup, source, target, ready, moving
+      mode: "preflight", // preflight, calibration, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
     }
@@ -200,6 +200,7 @@ class System extends React.Component {
           <Header
             mode={this.state.mode}
             onHeaderClick={(mode) => this.handleHeaderClick(mode)}
+            onNextClick={() => this.handleChangeClick()}
           />
         </div>
 
