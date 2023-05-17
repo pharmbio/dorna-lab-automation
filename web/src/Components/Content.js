@@ -29,7 +29,7 @@ function Controls(props) {
       buttons = ["Move", "Save"]
       break;
     case "setup":
-      buttons = ["Move", "Save"]
+      buttons = []
       break;
   }
   return <RenderButtons buttons={buttons} onButtonClick={props.onButtonClick}/>

@@ -1,0 +1,49 @@
+simpleMove() {
+  const plates = this.state.plates;
+  const target = Object.keys(plates).find(key => plates[key] === "full");
+  console.log("Moving to " + target);
+      	
+  fetch("http://localhost:5000/move?target="+target)
+    .then(res => {
+      console.log(res)
+    })
+}
+
+savePosition() {
+  const plates = this.state.plates;
+  const target = Object.keys(plates).find(key => plates[key] === "full");
+  console.log("Updated " + target + " with new coordinates. Written to calibration.json")
+  fetch("http://localhost:5000/save?node="+target)
+    .then(res => {
+      console.log(res)
+    })
+  fetch("http://localhost:5000/calibrate")
+    .then(res => {
+      console.log(res)
+    })
+}
+
+requestMove() {
+  const plates = this.state.plates;
+  const source = Object.keys(plates).find(key => plates[key] === "source");
+  const target = Object.keys(plates).find(key => plates[key] === "target");
+  console.log(source + " ==> " + target);
+
+  fetch("http://localhost:5000/move?target="+source)
+    .then(res => {
+      console.log(res)
+      fetch("http://localhost:5000/pickup")
+        .then(res => {
+          console.log(res)
+          fetch("http://localhost:5000/move?source="+source+"&target="+target)
+            .then(res => {
+              console.log(res)
+                fetch("http://localhost:5000/place")
+                  .then(res => {
+                    console.log(res)
+                    this.ready(source, target)
+                  })
+            })
+        })
+    })
+}

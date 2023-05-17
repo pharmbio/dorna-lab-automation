@@ -28,119 +28,14 @@ class System extends React.Component {
     }
   }
 
-  ready(source, target) {
-    const plates = this.state.plates;
-    plates[source] = "empty";
-    plates[target] = "full";
-    const initial = structuredClone(plates);
-    this.setState({
-      mode: "source",
-      initial: initial,
-      plates: plates
-    })
-  }
-
-  simpleMove() {
-    const plates = this.state.plates;
-    const target = Object.keys(plates).find(key => plates[key] === "full");
-    console.log("Moving to " + target);
-		
-    fetch("http://localhost:5000/move?target="+target)
-      .then(res => {
-        console.log(res)
-      })
-  }
-
-  savePosition() {
-    const plates = this.state.plates;
-    const target = Object.keys(plates).find(key => plates[key] === "full");
-    console.log("Updated " + target + " with new coordinates. Written to calibration.json")
-    fetch("http://localhost:5000/save?node="+target)
-      .then(res => {
-        console.log(res)
-      })
-    fetch("http://localhost:5000/calibrate")
-      .then(res => {
-        console.log(res)
-      })
-  }
-
-  requestMove() {
-    const plates = this.state.plates;
-    const source = Object.keys(plates).find(key => plates[key] === "source");
-    const target = Object.keys(plates).find(key => plates[key] === "target");
-    console.log(source + " ==> " + target);
-
-    fetch("http://localhost:5000/move?target="+source)
-      .then(res => {
-        console.log(res)
-        fetch("http://localhost:5000/pickup")
-          .then(res => {
-            console.log(res)
-            fetch("http://localhost:5000/move?source="+source+"&target="+target)
-              .then(res => {
-                console.log(res)
-                  fetch("http://localhost:5000/place")
-                    .then(res => {
-                      console.log(res)
-                      this.ready(source, target)
-                    })
-              })
-          })
-      })
-  }
-
-  abortMove() {
-    fetch("http://localhost:5000/halt")
-      .then(response => response.json())
-      .then(data => console.log(data))
-  }
-
-  calibrate() {
-    fetch("http://localhost:5000/calibrate")
-      .then(response => response.json())
-      .then(data => console.log(data))
-  }
-
-  resetPlates() {
-    const initial = structuredClone(this.state.initial);
-    this.setState({plates: initial});
-  }
-
-  handleHeaderClick(mode) {
-    const defaultMode = {
-      preflight:    "preflight",
-      calibration:  "calibration",
-      setup:        "setup",
-      move:         "source",
-      ready:        "ready",
-    };
-    console.log(this.state.mode + " ==> " + mode)
-    this.setState({mode: defaultMode[mode]})
-  }
-
-  handleRunClick() {
-    switch(this.state.mode) {
-      case "ready":
-        this.setState({mode: "moving"});
-        this.requestMove();
-        break;
-      case "moving":
-        this.setState({mode: "ready"});
-        this.abortMove();
-        break;
-      default: break;
-    }
-  }
-
   handlePlateClick(id) {
     const plates = this.state.plates;
     switch(this.state.mode) {
       case "calibration": 
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
-	  plates[id] = "full"
 	})
+        plates[id] = "full"
 	break;
       case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
       case "source":
@@ -160,7 +55,56 @@ class System extends React.Component {
     this.setState({plates: plates})
   }
 
-  // preflight, calibration, setup, source, target, ready, moving
+
+  ready(source, target) {
+    const plates = this.state.plates;
+    plates[source] = "empty";
+    plates[target] = "full";
+    const initial = structuredClone(plates);
+    this.setState({
+      mode: "source",
+      initial: initial,
+      plates: plates
+    })
+  }
+
+  changeMode(mode) {
+    let plates = this.state.plates;
+    let initial = this.state.initial;
+
+    if (this.state.mode === "setup") {
+      this.setState({initial: plates})
+      console.log(this.state.initial)
+    }
+
+    switch(mode) {
+      case "preflight":
+        Object.keys(plates).forEach((item) => {
+	  plates[item] = "empty"
+	})
+        break;
+      case "calibration":
+        Object.keys(plates).forEach((item) => {
+	  plates[item] = "empty"
+	})
+        break;
+      case "setup":
+        this.setState({plates: initial})
+        break;
+    }
+    this.setState({mode: mode})
+  }
+
+  handleHeaderClick(mode) {
+    const defaultMode = {
+      preflight:    "preflight",
+      calibration:  "calibration",
+      setup:        "setup",
+      move:         "source",
+      ready:        "ready",
+    };
+    this.changeMode(defaultMode[mode])
+  }
 
   handlePrevClick() {
     switch(this.state.mode) {
@@ -168,22 +112,22 @@ class System extends React.Component {
         console.log("Already at first mode");
         break;
       case "calibration":
-        this.setState({mode: "preflight"});
+        this.changeMode("preflight");
         break;
       case "setup":
-        this.setState({mode: "calibration"});
+        this.changeMode("calibration");
         break;
       case "source":
-        this.setState({mode: "setup"});
+        this.changeMode("setup");
         break;
       case "target":
-        this.setState({mode: "setup"});
+        this.changeMode("setup");
         break;
       case "ready":
-        this.setState({mode: "source"});
+        this.changeMode("source");
         break;
       case "moving":
-        this.setState({mode: "source"});
+        this.changeMode("source");
         break;
     }
   }
@@ -191,19 +135,19 @@ class System extends React.Component {
   handleNextClick() {
     switch(this.state.mode) {
       case "preflight":
-        this.setState({mode: "calibration"});
+        this.changeMode("calibration");
         break;
       case "calibration":
-        this.setState({mode: "setup"});
+        this.changeMode("setup");
         break;
       case "setup":
-        this.setState({mode: "source"});
+        this.changeMode("source");
         break;
       case "source":
-        this.setState({mode: "ready"});
+        this.changeMode("ready");
         break;
       case "target":
-        this.setState({mode: "ready"});
+        this.changeMode("ready");
         break;
       case "ready":
         console.log("already at last stage");
@@ -214,8 +158,8 @@ class System extends React.Component {
     }
   }
 
-  handleButtonClick(id) {
-    console.log(id)
+  handleButtonClick(entry) {
+    console.log(entry)
   }
 
   render() {
@@ -238,7 +182,10 @@ class System extends React.Component {
         </div>
 
         <div className="container-fluid">
-          <Content mode={this.state.mode} onButtonClick={(id) => this.handleButtonClick(id)}/>
+          <Content 
+            mode={this.state.mode} 
+            onButtonClick={(id) => this.handleButtonClick(id)}
+          />
         </div>
       </div>
     );
