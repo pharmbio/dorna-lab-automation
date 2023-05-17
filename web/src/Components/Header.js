@@ -27,6 +27,9 @@ export default class Header extends React.Component {
       moving:       "Press abort to stop move."
     };
 
+    let atFirst = this.props.mode === "preflight"
+    let atLast = this.props.mode === "ready" || this.props.mode === "moving"
+
     return (
       <div className="container bg-light">
         <nav className="navbar navbar-expand-md navbar-light">
@@ -35,7 +38,7 @@ export default class Header extends React.Component {
               <span className="navbar-toggler-icon"></span>
             </button>
             <div className="collapse navbar-collapse" id="navbarCollapse">
-              <button className="btn btn-outline-danger me-auto" onClick={() => this.props.onPrevClick()}>Previous</button>
+              <button className={"btn btn-outline-danger me-auto " + (atFirst ? 'disabled' : '')} onClick={() => this.props.onPrevClick()}>Previous</button>
               <ul className="navbar-nav me-auto">
                 {headerModes.map( mode => {
                   let active = mode==simplifiedMode[this.props.mode]
@@ -50,7 +53,7 @@ export default class Header extends React.Component {
                   )
                 })}
               </ul>
-              <button className="btn btn-outline-primary" onClick={() => this.props.onNextClick()}>Next</button>
+              <button className={"btn btn-outline-primary me-auto " + (atLast ? 'disabled' : '')} onClick={() => this.props.onNextClick()}>Next</button>
             </div>
           </div>
         </nav>

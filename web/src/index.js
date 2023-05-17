@@ -22,7 +22,7 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "preflight", // preflight, calibration, setup, source, target, ready, moving
+      mode: "calibration", // preflight, calibration, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
     }
@@ -66,7 +66,6 @@ class System extends React.Component {
   }
 
   requestMove() {
-
     const plates = this.state.plates;
     const source = Object.keys(plates).find(key => plates[key] === "source");
     const target = Object.keys(plates).find(key => plates[key] === "target");
@@ -120,7 +119,6 @@ class System extends React.Component {
     this.setState({mode: defaultMode[mode]})
   }
 
-
   handleRunClick() {
     switch(this.state.mode) {
       case "ready":
@@ -138,7 +136,7 @@ class System extends React.Component {
   handlePlateClick(id) {
     const plates = this.state.plates;
     switch(this.state.mode) {
-      case "preflight": 
+      case "calibration": 
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
 	  plates[id] = "full"
@@ -162,10 +160,12 @@ class System extends React.Component {
     this.setState({plates: plates})
   }
 
+  // preflight, calibration, setup, source, target, ready, moving
+
   handlePrevClick() {
     switch(this.state.mode) {
       case "preflight":
-        console.log("already at first stage");
+        console.log("Already at first mode");
         break;
       case "calibration":
         this.setState({mode: "preflight"});
@@ -180,7 +180,10 @@ class System extends React.Component {
         this.setState({mode: "setup"});
         break;
       case "ready":
-        this.setState({mode: "move"});
+        this.setState({mode: "source"});
+        break;
+      case "moving":
+        this.setState({mode: "source"});
         break;
     }
   }
@@ -205,39 +208,15 @@ class System extends React.Component {
       case "ready":
         console.log("already at last stage");
         break;
+      case "moving":
+        console.log("already at last stage");
+        break;
     }
   }
 
-  handleChangeClick() {
-    switch(this.state.mode) {
-      case "preflight":
-	this.setState({mode: "setup"})
-	this.calibrate()
-	break;
-      case "setup":
-        const plates = structuredClone(this.state.plates);
-        this.setState({initial: plates})
-        this.setState({mode: "source"});
-        break;
-      case "source":
-        this.setState({mode: "setup"});
-        this.resetPlates();
-        break;
-      case "target":
-        this.setState({mode: "source"});
-        this.resetPlates();
-        break;
-      case "ready":
-        this.setState({mode: "source"});
-        this.resetPlates();
-        break;
-      default: break;
-    }
+  handleButtonClick(id) {
+    console.log(id)
   }
-  // const className = props.id + " position " + props.plate;
-  // return <button className={className} onClick={props.onClick}>{props.id}</button>
-  // frame: "control", // control, dorna, flowbot
-  // this.setState({mode: "target"});
 
   render() {
     return (
@@ -259,7 +238,7 @@ class System extends React.Component {
         </div>
 
         <div className="container-fluid">
-          <Content mode={this.state.mode}/>
+          <Content mode={this.state.mode} onButtonClick={(id) => this.handleButtonClick(id)}/>
         </div>
       </div>
     );

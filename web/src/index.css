@@ -16,6 +16,10 @@ span {
   white-space: nowrap;
 }
 
+.active {
+  text-decoration: underline 2px;
+}
+
 .container {
   padding: 8px;
 }
