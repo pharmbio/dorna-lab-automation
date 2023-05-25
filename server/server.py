@@ -4,10 +4,9 @@ from helper import *
 import networkx as nx
 import socket
 import json
+from json.decoder import JSONDecodeError
 from typing import Optional, Any, Tuple, Union
 from enum import Enum
-
-import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -91,30 +90,52 @@ def closestNode(robot, graph:nx.Graph)->Optional[Any]:
                 minimum = distance
                 closest = node
 
-    if minimum > 50**2:
+    if minimum > 50**2: # If distance is larger than 50mm, return None
         return None
     else:
         return closest
 
 
 def main(file):
+    # Read config file, retreive hostname and create graph structure
     hostname = socket.gethostname()
-
     g:nx.Graph = createGraph(hostname, "../graph.json")
-
     with open(file) as json_file:
         arg:dict = json.load(json_file)
-    
-    dorna_ip = arg[hostname]
+    ip = arg[hostname]
+    port = arg["port"]
 
+
+    # Establish connection with Dorna
     r = Dorna()
-    connected = r.connect(dorna_ip, arg["port"])
+    def verifyDornaConnection(ip, port):
+        connected = r.connect(ip, port)
+        noConnectionResponse = "No connection to Dorna control box"
+        return connected, noConnectionResponse
+
+    connected, *_ = verifyDornaConnection(ip, port)
     print("Dorna is " + ("connected" if connected else "not connected"))
+
 
     # Import previous calibration
     filename = "calibration.json"
-    with open(filename, "r") as file:
+    
+    try:
+        file = open(filename, "r")
+    except FileNotFoundError:
+        # Create new empty calibration.json
+        file = open(filename, "w+")
+        json.dump({}, file)
+    except OSError as e:
+        # Catch other errors, such as permissions etc.
+        print(f"Unable to open {filename}: {e}")
+        return
+
+    try:
         data = json.load(file)
+    except JSONDecodeError:
+        print("Calibration file is empty, creating new entry: ", JSONDecodeError)
+        data = {}
 
     updated_nodes = []
 
@@ -124,66 +145,62 @@ def main(file):
             g.nodes[node]["coordinates"] = new
             updated_nodes.append(node)
 
-    print("Updated nodes " + ", ".join(updated_nodes) + "!")
-    print("Ready for input")
+    if updated_nodes:
+        print("Updated nodes " + ", ".join(updated_nodes) + "!")
+    else:
+        print("No node coordinates overwritten.")
 
-    # Example route
-    @app.get('/data')
-    def e():
-     
-        # Returning an api for showing in  reactjs
-        return {
-            'Name':"geek",
-            "Age":"22",
-            "Date": "rikard",
-            "programming":"python"
-            }, HTTP_STATUS.OK
+
+
+    # ----- ROUTES -----
 
     @app.get("/get_dorna_ip")
     def get_dorna_ip()->Tuple[Response,int]:
-        print("Sending IP adress: " + dorna_ip)
-        response = jsonify(dorna_ip)
-        return response, HTTP_STATUS.OK
+        print("Sending IP adress: " + ip)
+        return jsonify(ip), HTTP_STATUS.OK
+
 
     @app.get("/start_motors")
     def start_motors()->Tuple[Response,int]:
-        print("Powering on dorna motors")
         if r.get_motor() == 0:
+            print("Powering on dorna motors")
             r.set_motor(1)
-        response = jsonify(r.get_motor())
-        return response, HTTP_STATUS.OK
+        return jsonify("Motors are: ", r.get_motor()), HTTP_STATUS.OK
+
 
     @app.get("/move")
-    def move()->Tuple[Union[str,Response],int]:
+    def move()->Tuple[Response,int]:
         source = request.args.get("source")
         target = request.args.get("target")
 
-        print(f"moving from {source} to {target} ..")
+        print(f"moving from {source} to {target}.")
         
         if target not in g:
-            print("400 - Target not found")
-            return "Target not found", 400
+            return jsonify("Target not found"), HTTP_STATUS.BAD_REQUEST
             
         if not source:
             source = closestNode(r, g)
             if source is None:
-                return "Too far from node", 400
+                return jsonify("Too far from node"), HTTP_STATUS.BAD_REQUEST
             else:
                 if goToNode(r, g, source)!=NodeMoveResult.SUCCESS:
-                    return "failed to move to node", 400 
+                    return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR
 
         path = nx.shortest_path(g, source=source, target=target)
         print(f"shortest path from {source} to {target} is: {path}")
         for node in path:
             if goToNode(r, g, node)!=NodeMoveResult.SUCCESS:
-                return "failed to move to node", HTTP_STATUS.INTERNAL_SERVER_ERROR
+                return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR
 
-        response = jsonify("Moved through nodes " + str(path))
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, HTTP_STATUS.OK
+        return jsonify("Moved through nodes " + str(path)), HTTP_STATUS.OK
+
 
     @app.get("/pickup")
     def pickup()->Tuple[Response,int]:
+        connected, response = verifyDornaConnection(ip, port)
+        if not connected:
+            return jsonify(response), HTTP_STATUS.NOT_FOUND
+
         prepare(r)
         status = r.jmove(rel=1, z=-20)
         grip(r)
@@ -192,8 +209,13 @@ def main(file):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, HTTP_STATUS.OK
 
+
     @app.get("/place")
     def place()->Tuple[Response,int]:
+        connected, response = verifyDornaConnection(ip, port)
+        if not connected:
+            return jsonify(response), HTTP_STATUS.NOT_FOUND
+
         status = r.jmove(rel=1, z=-20)
         release(r)
         status = r.jmove(rel=1, z=20)
@@ -202,8 +224,13 @@ def main(file):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, HTTP_STATUS.OK
 
+
     @app.get("/testcalibration")
     def testcalibration()->Tuple[Response,int]:
+        connected, response = verifyDornaConnection(ip, port)
+        if not connected:
+            return jsonify(response), HTTP_STATUS.NOT_FOUND
+
         prepare(r)
         status = r.jmove(rel=1, z=-10)
         r.sleep(3)
@@ -212,65 +239,77 @@ def main(file):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, HTTP_STATUS.OK
 
-    @app.get("/halt")
-    def halt():
-        status = r.halt()
-        print(f"/halt - {status=}")
-        response = jsonify(f"Robot stopped: {str(status)}")
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, HTTP_STATUS.OK
 
     @app.get("/poweroff")
-    def poweroff()->Tuple[str,int]:
+    def poweroff()->Tuple[Response,int]:
+        connected, response = verifyDornaConnection(ip, port)
+        if not connected:
+            return jsonify(response), HTTP_STATUS.NOT_FOUND
+
         target = "safe"
         source = closestNode(r, g)
         if source is None:
-            return "Too far from node", 400
+            return jsonify("Too far from node"), HTTP_STATUS.BAD_REQUEST
         else:
             if goToNode(r, g, source)!=NodeMoveResult.SUCCESS:
-                return "failed to move to node", HTTP_STATUS.INTERNAL_SERVER_ERROR
+                return jsonify("Failed to move to node"), HTTP_STATUS.BAD_REQUEST
 
         path = nx.shortest_path(g, source=source, target=target)
-        print(f"shortest path from {source} to {target} is: {path}")
+        print(f"Shortest path from {source} to {target} is: {path}")
         for node in path:
             if goToNode(r, g, node)!=NodeMoveResult.SUCCESS:
-                return "failed to move to node", HTTP_STATUS.INTERNAL_SERVER_ERROR
+                return jsonify("Failed to move to node"), HTTP_STATUS.BAD_REQUEST
 
         r.set_motor(0)
         r.close()
-        return "Robot turned off!", 200
+        return jsonify("Robot turned off!"), HTTP_STATUS.OK
+
 
     @app.get("/save")
-    def save()->Tuple[str,int]:
+    def save()->Tuple[Response,int]:
         node = request.args.get("node")
         if not node:
-            return "No node specified for calibration...\n", 400
+            return jsonify("No node specified for calibration..."), HTTP_STATUS.BAD_REQUEST
+
+        # connected, response = verifyDornaConnection(ip, port)
+        # if not connected:
+        #     return jsonify(response), HTTP_STATUS.NOT_FOUND
         x, y, z, a, b, *_ = r.get_all_pose()
         coordinates = [x, y, z, a, b]
 
-        filename = "calibration.json"
-
-        with open(filename, "r+") as file:
+        with open(filename, "r") as file:
             try:
                 data = json.load(file)
-            except:
+            except JSONDecodeError:
+                print(JSONDecodeError)
                 data = {}
-        
-        if not data.get(node):
-            data[node] = []
-        data[node].append(coordinates)
 
-        with open(filename, 'w') as file:
-            json.dump(data, file, indent=4)
+            #If node is new
+            if not data.get(node): 
+                data[node] = []
+                data[node].append(coordinates)
+            #If coordinates are new
+            if data[node][-1] != coordinates: 
+                data[node].append(coordinates)
 
-        return "Saved " + node + " successfully!", 200
+            #Update current graph with new position
+            g.nodes[node]["coordinates"] = coordinates
+            print(coordinates)
+
+        with open(filename, "w") as outfile:
+            json.dump(data, outfile, indent=4)
+
+        return jsonify("Updated " + node + " successfully: " + str(coordinates)), HTTP_STATUS.OK
+
 
     @app.get("/calibrate")
-    def calibrate()->Tuple[str,int]:
-        filename = "calibration.json"
-        with open(filename, "a+") as file:
-            file.seek(0)
-            data = json.load(file)
+    def calibrate()->Tuple[Response,int]:
+        with open(filename, "r") as file:
+            try:
+                data = json.load(file)
+            except JSONDecodeError:
+                print(JSONDecodeError)
+                data = {}
 
         for node in list(g.nodes):
             print(node, g.nodes[node])
@@ -278,20 +317,10 @@ def main(file):
                 new = data[node][-1]
                 g.nodes[node]["coordinates"] = new
                 print("updated " + node)
-                print(node, g.nodes[node])
+                # print(node, g.nodes[node])
 
-        return "Read calibration file and updated coordinates", 200
+        return jsonify("Read calibration file and updated coordinates"), HTTP_STATUS.OK
 
-    @app.get("/draw")
-    def draw()->Tuple[str,int]:
-        try:
-            nx.draw(g, with_labels=True)
-            plt.show()
-            plt.savefig("graph.png", format="PNG")
-            plt.close()
-            return 'Success', 200
-        except:
-            return 'Matplotlib not installed', 300
 
     app.run(debug=False)
 
