@@ -28,8 +28,8 @@ function Controls(props) {
     case "calibration":
       buttons = ["Move", "Save"]
       break;
-    case "setup":
-      buttons = []
+    case "ready":
+      buttons = ["Run"]
       break;
   }
   return <RenderButtons buttons={buttons} onButtonClick={props.onButtonClick}/>
@@ -37,8 +37,8 @@ function Controls(props) {
 
 function Information(props) {
   switch(props.mode) {
-    case "preflight": return <Preflight/>; break;
-    default: return <Calibration/>; break;
+    case "preflight": return <Preflight/>;
+    default: return <Calibration/>;
   }
 }
 

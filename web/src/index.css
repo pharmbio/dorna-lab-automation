@@ -9,7 +9,7 @@ body {
 iframe {
   display: block;
   width: 100%;
-  height: calc(100vh - 350px);
+  height: calc(100vh - 340px);
 }
 span {
   padding-left: 20px;
@@ -44,7 +44,6 @@ span {
 .map {
   text-align: center;
 }
-
 
 .position {
   background: #ddd;

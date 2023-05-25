@@ -22,50 +22,10 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "calibration", // preflight, calibration, setup, source, target, ready, moving
+      mode: "preflight", // preflight, calibration, setup, source, target, ready, moving
       plates: obj, // entries can be: empty, full, source, target
       initial: structuredClone(obj) // copy
     }
-  }
-
-  handlePlateClick(id) {
-    const plates = this.state.plates;
-    switch(this.state.mode) {
-      case "calibration": 
-        Object.keys(plates).forEach((item) => {
-	  plates[item] = "empty"
-	})
-        plates[id] = "full"
-	break;
-      case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
-      case "source":
-        if (plates[id] === "full") {
-          plates[id] = "source";
-          this.setState({mode: "target"});
-        }
-        break;
-      case "target":
-        if (plates[id] === "empty") {
-          plates[id] = "target";
-          this.setState({mode: "ready"});
-        }
-        break;
-      default: break;
-    }
-    this.setState({plates: plates})
-  }
-
-
-  ready(source, target) {
-    const plates = this.state.plates;
-    plates[source] = "empty";
-    plates[target] = "full";
-    const initial = structuredClone(plates);
-    this.setState({
-      mode: "source",
-      initial: initial,
-      plates: plates
-    })
   }
 
   changeMode(mode) {
@@ -158,6 +118,33 @@ class System extends React.Component {
     }
   }
 
+  handlePlateClick(id) {
+    const plates = this.state.plates;
+    switch(this.state.mode) {
+      case "calibration": 
+        Object.keys(plates).forEach((item) => {
+	  plates[item] = "empty"
+	})
+        plates[id] = "full"
+	break;
+      case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
+      case "source":
+        if (plates[id] === "full") {
+          plates[id] = "source";
+          this.setState({mode: "target"});
+        }
+        break;
+      case "target":
+        if (plates[id] === "empty") {
+          plates[id] = "target";
+          this.setState({mode: "ready"});
+        }
+        break;
+      default: break;
+    }
+    this.setState({plates: plates})
+  }
+
   handleButtonClick(entry) {
     console.log(entry)
   }
@@ -165,7 +152,7 @@ class System extends React.Component {
   render() {
     return (
       <div>
-        <div className="container">
+        <div className="container-fluid">
           <Header
             mode={this.state.mode}
             onHeaderClick={(mode) => this.handleHeaderClick(mode)}

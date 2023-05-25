@@ -1,4 +1,4 @@
-from flask import Flask, request, Request, Response, jsonify
+from flask import Flask, request, Response, jsonify
 from dorna2 import Dorna
 from helper import *
 import networkx as nx
@@ -104,13 +104,12 @@ def main(file):
 
     with open(file) as json_file:
         arg:dict = json.load(json_file)
+    
+    dorna_ip = arg[hostname]
 
     r = Dorna()
-    r.connect(arg[hostname], arg["port"])
-
-    print("turning motor on ..")
-    if r.get_motor() == 0:
-        status = r.set_motor(1)
+    connected = r.connect(dorna_ip, arg["port"])
+    print("Dorna is " + ("connected" if connected else "not connected"))
 
     # Import previous calibration
     filename = "calibration.json"
@@ -127,6 +126,32 @@ def main(file):
 
     print("Updated nodes " + ", ".join(updated_nodes) + "!")
     print("Ready for input")
+
+    # Example route
+    @app.get('/data')
+    def e():
+     
+        # Returning an api for showing in  reactjs
+        return {
+            'Name':"geek",
+            "Age":"22",
+            "Date": "rikard",
+            "programming":"python"
+            }, HTTP_STATUS.OK
+
+    @app.get("/get_dorna_ip")
+    def get_dorna_ip()->Tuple[Response,int]:
+        print("Sending IP adress: " + dorna_ip)
+        response = jsonify(dorna_ip)
+        return response, HTTP_STATUS.OK
+
+    @app.get("/start_motors")
+    def start_motors()->Tuple[Response,int]:
+        print("Powering on dorna motors")
+        if r.get_motor() == 0:
+            r.set_motor(1)
+        response = jsonify(r.get_motor())
+        return response, HTTP_STATUS.OK
 
     @app.get("/move")
     def move()->Tuple[Union[str,Response],int]:
@@ -145,7 +170,7 @@ def main(file):
                 return "Too far from node", 400
             else:
                 if goToNode(r, g, source)!=NodeMoveResult.SUCCESS:
-                    return "failed to move to node", 
+                    return "failed to move to node", 400 
 
         path = nx.shortest_path(g, source=source, target=target)
         print(f"shortest path from {source} to {target} is: {path}")

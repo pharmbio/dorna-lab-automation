@@ -38,8 +38,8 @@ export default class Header extends React.Component {
               <span className="navbar-toggler-icon"></span>
             </button>
             <div className="collapse navbar-collapse" id="navbarCollapse">
-              <button className={"btn btn-outline-danger me-auto " + (atFirst ? 'disabled' : '')} onClick={() => this.props.onPrevClick()}>Previous</button>
-              <ul className="navbar-nav me-auto">
+              <button className={"btn btn-outline-danger mx-auto " + (atFirst ? 'disabled' : '')} onClick={() => this.props.onPrevClick()}>Previous</button>
+              <ul className="navbar-nav mx-auto">
                 {headerModes.map( mode => {
                   let active = mode==simplifiedMode[this.props.mode]
                   let className="nav-link " + (active ? "active" : "")
@@ -53,7 +53,7 @@ export default class Header extends React.Component {
                   )
                 })}
               </ul>
-              <button className={"btn btn-outline-primary me-auto " + (atLast ? 'disabled' : '')} onClick={() => this.props.onNextClick()}>Next</button>
+              <button className={"btn btn-outline-primary mx-auto " + (atLast ? 'disabled' : '')} onClick={() => this.props.onNextClick()}>Next</button>
             </div>
           </div>
         </nav>
