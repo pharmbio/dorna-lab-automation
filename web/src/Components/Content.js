@@ -5,10 +5,11 @@ function RenderButtons(props) {
   return (
     <ul id="calibrate" className="nav">
       {props.buttons.map( entry => {
-        let className="btn btn-secondary"
+        let className="btn btn-secondary" 
         return (
           <li key={entry} className="nav-item">
             <button 
+              id={entry}
               type="button" 
               className={className}
               onClick={() => props.onButtonClick(entry)}
@@ -38,7 +39,8 @@ function Controls(props) {
 function Information(props) {
   switch(props.mode) {
     case "preflight": return <Preflight/>;
-    default: return <Calibration/>;
+    default: return <Calibration />;
+    
   }
 }
 

@@ -146,7 +146,30 @@ class System extends React.Component {
   }
 
   handleButtonClick(entry) {
-    console.log(entry)
+    const mode = this.state.mode
+
+    switch(mode) {
+      case "calibration":
+        const plates = this.state.plates
+        const target = Object.keys(plates).find(key => plates[key] === "full");
+        switch(entry) {
+          case "Move":
+            console.log("Moving to " + target);
+            fetch("/move?target="+target)
+              .then(res => {
+                console.log(res)
+              })
+          case "Save":
+            console.log("Updated " + target + " with new coordinates. Written to calibration.json")
+            fetch("/save?node="+target)
+              .then(res => {
+                console.log(res)
+              })
+            break;
+          default: break;
+        }
+    
+    }
   }
 
   render() {

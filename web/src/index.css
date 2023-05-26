@@ -28,6 +28,10 @@ span {
   padding: 8px;
 }
 
+#Move {
+  background: var(--bs-blue)
+}
+
 #calibrate {
   margin-left: 12px;
 }

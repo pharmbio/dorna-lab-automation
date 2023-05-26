@@ -96,11 +96,13 @@ def closestNode(robot, graph:nx.Graph)->Optional[Any]:
         return closest
 
 
-def main(file):
+def main():
+    configfile, graphfile, calibrationfile = "../config.json", "../graph.json", "../calibration.json"
+
     # Read config file, retreive hostname and create graph structure
     hostname = socket.gethostname()
-    g:nx.Graph = createGraph(hostname, "../graph.json")
-    with open(file) as json_file:
+    g:nx.Graph = createGraph(hostname, graphfile)
+    with open(configfile) as json_file:
         arg:dict = json.load(json_file)
     ip = arg[hostname]
     port = arg["port"]
@@ -118,17 +120,15 @@ def main(file):
 
 
     # Import previous calibration
-    filename = "calibration.json"
-    
     try:
-        file = open(filename, "r")
+        file = open(calibrationfile, "r")
     except FileNotFoundError:
         # Create new empty calibration.json
-        file = open(filename, "w+")
+        file = open(calibrationfile, "w+")
         json.dump({}, file)
     except OSError as e:
         # Catch other errors, such as permissions etc.
-        print(f"Unable to open {filename}: {e}")
+        print(f"Unable to open {calibrationfile}: {e}")
         return
 
     try:
@@ -165,7 +165,15 @@ def main(file):
         if r.get_motor() == 0:
             print("Powering on dorna motors")
             r.set_motor(1)
-        return jsonify("Motors are: ", r.get_motor()), HTTP_STATUS.OK
+        return jsonify("Motors are: " + ("ON" if bool(r.get_motor()) else "OFF")), HTTP_STATUS.OK
+
+
+    @app.get("/stop_motors")
+    def stop_motors()->Tuple[Response,int]:
+        if r.get_motor() == 1:
+            print("Powering off dorna motors")
+            r.set_motor(0)
+        return jsonify("Motors are: " + ("ON" if bool(r.get_motor()) else "OFF")), HTTP_STATUS.OK
 
 
     @app.get("/move")
@@ -242,10 +250,6 @@ def main(file):
 
     @app.get("/poweroff")
     def poweroff()->Tuple[Response,int]:
-        connected, response = verifyDornaConnection(ip, port)
-        if not connected:
-            return jsonify(response), HTTP_STATUS.NOT_FOUND
-
         target = "safe"
         source = closestNode(r, g)
         if source is None:
@@ -277,7 +281,7 @@ def main(file):
         x, y, z, a, b, *_ = r.get_all_pose()
         coordinates = [x, y, z, a, b]
 
-        with open(filename, "r") as file:
+        with open(calibrationfile, "r") as file:
             try:
                 data = json.load(file)
             except JSONDecodeError:
@@ -296,7 +300,7 @@ def main(file):
             g.nodes[node]["coordinates"] = coordinates
             print(coordinates)
 
-        with open(filename, "w") as outfile:
+        with open(calibrationfile, "w") as outfile:
             json.dump(data, outfile, indent=4)
 
         return jsonify("Updated " + node + " successfully: " + str(coordinates)), HTTP_STATUS.OK
@@ -304,7 +308,7 @@ def main(file):
 
     @app.get("/calibrate")
     def calibrate()->Tuple[Response,int]:
-        with open(filename, "r") as file:
+        with open(calibrationfile, "r") as file:
             try:
                 data = json.load(file)
             except JSONDecodeError:
@@ -325,4 +329,4 @@ def main(file):
     app.run(debug=False)
 
 if __name__ == "__main__":
-    main("config.json")
+    main()
