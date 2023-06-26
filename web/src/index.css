@@ -25,7 +25,16 @@ span {
 }
 
 .container-fluid {
+  padding: 0px;
+}
+
+.section {
   padding: 8px;
+}
+
+#Controls {
+  height: 46px;
+  margin-bottom: -8px;
 }
 
 #Move {

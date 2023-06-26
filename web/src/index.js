@@ -175,7 +175,7 @@ class System extends React.Component {
   render() {
     return (
       <div>
-        <div className="container-fluid">
+        <div className="section">
           <Header
             mode={this.state.mode}
             onHeaderClick={(mode) => this.handleHeaderClick(mode)}
@@ -184,7 +184,7 @@ class System extends React.Component {
           />
         </div>
 
-        <div className="container-fluid">
+        <div className="section">
           <Positions
             plates={this.state.plates}
             onPlateClick={(id) => this.handlePlateClick(id)}
