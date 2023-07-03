@@ -4,31 +4,18 @@ export default class Header extends React.Component {
   render() {
 
     // List of modes to expose to user in Header component, order matters
-    const headerModes = ["preflight", "calibration", "setup", "move", "ready"]
-
-    // Map all different modes to the modes exposed to the user
-    const simplifiedMode = {
-      preflight:    "preflight",
-      calibration:  "calibration",
-      setup:        "setup",
-      source:       "move",
-      target:       "move",
-      ready:        "ready",
-      moving:       "ready"
-    };
+    const headerModes = ["preflight", "calibration", "setup", "select", "move"]
 
     const text = {
       preflight:    "Go through preflight checklist and make sure each point is understood.",
       calibration:  "Use the Dorna GUI below to calibrate each position.",
       setup:        "Select initial plate position.",
-      source:       "Select plate for pick up.",
-      target:       "Select target position for plate.",
-      ready:        "Press run to perform move.",
-      moving:       "Press abort to stop move."
+      select:       "Select plate for pick up and target position.",
+      move:         "Press run to perform move.",
     };
 
     let atFirst = this.props.mode === "preflight"
-    let atLast = this.props.mode === "ready" || this.props.mode === "moving"
+    let atLast = this.props.mode === "move"
 
     return (
       <div className="container bg-light">
@@ -41,7 +28,7 @@ export default class Header extends React.Component {
               <button className={"btn btn-outline-danger mx-auto " + (atFirst ? 'disabled' : '')} onClick={() => this.props.onPrevClick()}>Previous</button>
               <ul className="navbar-nav mx-auto">
                 {headerModes.map( mode => {
-                  let active = mode==simplifiedMode[this.props.mode]
+                  let active = mode == this.props.mode
                   let className="nav-link " + (active ? "active" : "")
                   let title = mode.charAt(0).toUpperCase() + mode.slice(1);
                   return (

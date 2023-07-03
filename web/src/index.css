@@ -1,7 +1,6 @@
 html {
   overflow-y: scroll;
 }
-
 body {
   margin: 0px;
   background: #fff;
@@ -11,23 +10,15 @@ iframe {
   width: 100%;
   height: calc(100vh - 340px);
 }
-span {
-  padding-left: 20px;
-  white-space: nowrap;
-}
-
 .active {
   text-decoration: underline 2px;
 }
-
 .container {
   padding: 8px;
 }
-
 .container-fluid {
   padding: 0px;
 }
-
 .section {
   padding: 8px;
 }
@@ -42,6 +33,10 @@ span {
 }
 
 #calibrate {
+  margin-left: 12px;
+}
+
+.navbar-text {
   margin-left: 12px;
 }
 
@@ -71,7 +66,7 @@ span {
   background: var(--bs-secondary);
 }
 .position.source {
-  background: var(--bs-success);
+  background: var(--bs-primary);
 }
 .position.target {
   background: var(--bs-danger);

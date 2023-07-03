@@ -22,9 +22,12 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "preflight", // preflight, calibration, setup, source, target, ready, moving
-      plates: obj, // entries can be: empty, full, source, target
-      initial: structuredClone(obj) // copy
+      mode: "calibration",  // preflight, calibration, setup, select, move
+      selectMode: "source", // source, target
+      moveStage: "ready",   // ready, busy
+      plates: obj,          // entries can be: empty, full, source, target
+      initial: structuredClone(obj), // copy
+      statusText: ""
     }
   }
 
@@ -51,70 +54,50 @@ class System extends React.Component {
       case "setup":
         this.setState({plates: initial})
         break;
+      case "select":
+        this.setState({selectMode: "source"})
+      case "move":
+        this.setState({selectMode: "ready"})
     }
     this.setState({mode: mode})
   }
 
+  changeStatusText(string, delay) {
+    setTimeout(() => this.setState({statusText: ""}), delay)
+    this.setState({statusText: string})
+  }
+
   handleHeaderClick(mode) {
-    const defaultMode = {
-      preflight:    "preflight",
-      calibration:  "calibration",
-      setup:        "setup",
-      move:         "source",
-      ready:        "ready",
-    };
-    this.changeMode(defaultMode[mode])
+    this.changeMode(mode)
   }
 
   handlePrevClick() {
     switch(this.state.mode) {
       case "preflight":
-        console.log("Already at first mode");
-        break;
+        console.log("Already at first mode"); break;
       case "calibration":
-        this.changeMode("preflight");
-        break;
+        this.changeMode("preflight"); break;
       case "setup":
-        this.changeMode("calibration");
-        break;
-      case "source":
-        this.changeMode("setup");
-        break;
-      case "target":
-        this.changeMode("setup");
-        break;
-      case "ready":
-        this.changeMode("source");
-        break;
-      case "moving":
-        this.changeMode("source");
-        break;
+        this.changeMode("calibration"); break;
+      case "select":
+        this.changeMode("setup"); break;
+      case "move":
+        this.changeMode("select"); break;
     }
   }
 
   handleNextClick() {
     switch(this.state.mode) {
       case "preflight":
-        this.changeMode("calibration");
-        break;
+        this.changeMode("calibration"); break;
       case "calibration":
-        this.changeMode("setup");
-        break;
+        this.changeMode("setup"); break;
       case "setup":
-        this.changeMode("source");
-        break;
-      case "source":
-        this.changeMode("ready");
-        break;
-      case "target":
-        this.changeMode("ready");
-        break;
-      case "ready":
-        console.log("already at last stage");
-        break;
-      case "moving":
-        console.log("already at last stage");
-        break;
+        this.changeMode("select"); break;
+      case "select":
+        this.changeMode("move"); break;
+      case "move":
+        console.log("Already at final mode"); break;
     }
   }
 
@@ -147,6 +130,10 @@ class System extends React.Component {
 
   handleButtonClick(entry) {
     const mode = this.state.mode
+
+    if (entry == "Move") {
+      this.changeStatusText("hello", 5000)
+    }
 
     switch(mode) {
       case "calibration":
@@ -191,10 +178,11 @@ class System extends React.Component {
           />
         </div>
 
-        <div className="container-fluid">
+        <div className="section">
           <Content 
             mode={this.state.mode} 
             onButtonClick={(id) => this.handleButtonClick(id)}
+            statusText={this.state.statusText}
           />
         </div>
       </div>
