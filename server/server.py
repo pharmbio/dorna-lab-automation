@@ -104,7 +104,12 @@ def main():
     g:nx.Graph = createGraph(hostname, graphfile)
     with open(configfile) as json_file:
         arg:dict = json.load(json_file)
-    ip = arg[hostname]
+    try:
+        ip = arg[hostname]
+        print("Dorna Control Box IP adress = ", ip)
+    except Exception as hostname:
+        print("Failed to find IP adress for hostname =", hostname)
+        return
     port = arg["port"]
 
 
@@ -156,8 +161,13 @@ def main():
 
     @app.get("/get_dorna_ip")
     def get_dorna_ip()->Tuple[Response,int]:
-        print("Sending IP adress: " + ip)
-        return jsonify(ip), HTTP_STATUS.OK
+        connected, *_ = verifyDornaConnection(ip, port)
+        if (ip):
+            print("Sending IP adress: " + ip)
+            return jsonify(ip=ip, connected=connected), HTTP_STATUS.OK
+        else:
+            print("No Dorna IP adress for this hostname")
+            return jsonify("No Dorna adress"), HTTP_STATUS.NOT_FOUND
 
 
     @app.get("/start_motors")

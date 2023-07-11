@@ -1,26 +1,36 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 
 export default function Calibration() {
   const [ip, setIp] = useState()
-  const [info, setInfo] = useState("Is the Dorna control box and python server on?")
+  const [info, setInfo] = useState("No connection to python server or Dorna control box.")
 
-  fetch("/get_dorna_ip").then((response) => {
-    if (response.ok) {
-      setInfo("")
-      return response.json();
-    }
-    throw new Error("Something went wrong");
-  })
-  .then((responseJson) => {
-      setIp(responseJson)
+  // useEffect to retreive ip adress from server just once, 
+  // and never update until reload thanks to []
+  useEffect(() => {
+    fetch("/get_dorna_ip").then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      setInfo("No response from Python server, demo page:")
+      setIp("lab.dorna.ai")
+      throw new Error("No response from Python server");
     })
-  .catch((error) => {
-      console.log(error)
-    });
+    .then((responseJson) => {
+        setIp(responseJson.ip)
+        if (responseJson.connected) {
+          setInfo("")
+        } else {
+          setInfo("Demo page:")
+        }
+      })
+    .catch((error) => {
+        console.log(error)
+      });
+  }, []);
 
   return (
     <div>
-      <h3 className="text-center">{info}</h3>
+      <h5 className="text-center">{info}</h5>
       <iframe id="iframe" className="my-auto" src={"http://"+ip}>
       </iframe>
     </div>

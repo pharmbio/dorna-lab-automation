@@ -9,11 +9,11 @@ sudo apt install python$pyv-venv
 python$pyv -m venv env
 source env/bin/activate
 
+# Use pip to install python dependencies
+pip install -r requirements.txt
+
 # Download and install dorna2 library
 git clone https://github.com/dorna-robotics/dorna2-python.git
 cd dorna2-python
 python setup.py install --force
 cd ..
-
-# Use pip to install python dependencies
-pip install -r requirements.txt

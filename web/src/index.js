@@ -22,8 +22,8 @@ class System extends React.Component {
     }
 
     this.state = {
-      mode: "calibration",  // preflight, calibration, setup, select, move
-      selectMode: "source", // source, target
+      stage: "calibration",  // preflight, calibration, setup, select, move
+      selectStage: "source", // source, target
       moveStage: "ready",   // ready, busy
       plates: obj,          // entries can be: empty, full, source, target
       initial: structuredClone(obj), // copy
@@ -31,16 +31,16 @@ class System extends React.Component {
     }
   }
 
-  changeMode(mode) {
+  changeStage(stage) {
     let plates = this.state.plates;
     let initial = this.state.initial;
 
-    if (this.state.mode === "setup") {
+    if (this.state.stage === "setup") {
       this.setState({initial: plates})
       console.log(this.state.initial)
     }
 
-    switch(mode) {
+    switch(stage) {
       case "preflight":
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
@@ -55,11 +55,11 @@ class System extends React.Component {
         this.setState({plates: initial})
         break;
       case "select":
-        this.setState({selectMode: "source"})
+        this.setState({selectStage: "source"})
       case "move":
-        this.setState({selectMode: "ready"})
+        this.setState({selectStage: "ready"})
     }
-    this.setState({mode: mode})
+    this.setState({stage: stage})
   }
 
   changeStatusText(string, delay) {
@@ -67,43 +67,43 @@ class System extends React.Component {
     this.setState({statusText: string})
   }
 
-  handleHeaderClick(mode) {
-    this.changeMode(mode)
+  handleHeaderClick(stage) {
+    this.changeStage(stage)
   }
 
   handlePrevClick() {
-    switch(this.state.mode) {
+    switch(this.state.stage) {
       case "preflight":
-        console.log("Already at first mode"); break;
+        console.log("Already at first stage"); break;
       case "calibration":
-        this.changeMode("preflight"); break;
+        this.changeStage("preflight"); break;
       case "setup":
-        this.changeMode("calibration"); break;
+        this.changeStage("calibration"); break;
       case "select":
-        this.changeMode("setup"); break;
+        this.changeStage("setup"); break;
       case "move":
-        this.changeMode("select"); break;
+        this.changeStage("select"); break;
     }
   }
 
   handleNextClick() {
-    switch(this.state.mode) {
+    switch(this.state.stage) {
       case "preflight":
-        this.changeMode("calibration"); break;
+        this.changeStage("calibration"); break;
       case "calibration":
-        this.changeMode("setup"); break;
+        this.changeStage("setup"); break;
       case "setup":
-        this.changeMode("select"); break;
+        this.changeStage("select"); break;
       case "select":
-        this.changeMode("move"); break;
+        this.changeStage("move"); break;
       case "move":
-        console.log("Already at final mode"); break;
+        console.log("Already at final stage"); break;
     }
   }
 
   handlePlateClick(id) {
     const plates = this.state.plates;
-    switch(this.state.mode) {
+    switch(this.state.stage) {
       case "calibration": 
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
@@ -114,13 +114,13 @@ class System extends React.Component {
       case "source":
         if (plates[id] === "full") {
           plates[id] = "source";
-          this.setState({mode: "target"});
+          this.setState({stage: "target"});
         }
         break;
       case "target":
         if (plates[id] === "empty") {
           plates[id] = "target";
-          this.setState({mode: "ready"});
+          this.setState({stage: "ready"});
         }
         break;
       default: break;
@@ -129,23 +129,25 @@ class System extends React.Component {
   }
 
   handleButtonClick(entry) {
-    const mode = this.state.mode
+    const stage = this.state.stage
 
     if (entry == "Move") {
       this.changeStatusText("hello", 5000)
     }
 
-    switch(mode) {
+    switch(stage) {
       case "calibration":
         const plates = this.state.plates
         const target = Object.keys(plates).find(key => plates[key] === "full");
         switch(entry) {
+
           case "Move":
             console.log("Moving to " + target);
             fetch("/move?target="+target)
               .then(res => {
                 console.log(res)
               })
+
           case "Save":
             console.log("Updated " + target + " with new coordinates. Written to calibration.json")
             fetch("/save?node="+target)
@@ -153,6 +155,7 @@ class System extends React.Component {
                 console.log(res)
               })
             break;
+
           default: break;
         }
     
@@ -164,8 +167,8 @@ class System extends React.Component {
       <div>
         <div className="section">
           <Header
-            mode={this.state.mode}
-            onHeaderClick={(mode) => this.handleHeaderClick(mode)}
+            stage={this.state.stage}
+            onHeaderClick={(stage) => this.handleHeaderClick(stage)}
             onPrevClick={() => this.handlePrevClick()}
             onNextClick={() => this.handleNextClick()}
           />
@@ -180,7 +183,7 @@ class System extends React.Component {
 
         <div className="section">
           <Content 
-            mode={this.state.mode} 
+            stage={this.state.stage} 
             onButtonClick={(id) => this.handleButtonClick(id)}
             statusText={this.state.statusText}
           />
