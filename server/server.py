@@ -190,22 +190,27 @@ def main():
     def move()->Tuple[Response,int]:
         source = request.args.get("source")
         target = request.args.get("target")
-
-        print(f"moving from {source} to {target}.")
         
+        # No or faulty target
         if target not in g:
-            return jsonify("Target not found"), HTTP_STATUS.BAD_REQUEST
+            return jsonify("No or faulty target selected"), HTTP_STATUS.BAD_REQUEST
+
+        # Check connection with dorna
+        connected, response = verifyDornaConnection(ip, port) 
+        if not connected:
+            return jsonify(response), HTTP_STATUS.INTERNAL_SERVER_ERROR
             
+        # If no source node provided, find closest one
         if not source:
             source = closestNode(r, g)
             if source is None:
-                return jsonify("Too far from node"), HTTP_STATUS.BAD_REQUEST
-            else:
-                if goToNode(r, g, source)!=NodeMoveResult.SUCCESS:
-                    return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR
+                return jsonify("Too far from node to perform safe move"), HTTP_STATUS.BAD_REQUEST
 
+        # Calculate shortest path through graph
         path = nx.shortest_path(g, source=source, target=target)
-        print(f"shortest path from {source} to {target} is: {path}")
+        print(f"Shortest path from {source} to {target} is: {path}")
+
+        # Go through each node in the calculated path
         for node in path:
             if goToNode(r, g, node)!=NodeMoveResult.SUCCESS:
                 return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR

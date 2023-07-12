@@ -22,7 +22,8 @@ class System extends React.Component {
     }
 
     this.state = {
-      stage: "calibration",  // preflight, calibration, setup, select, move
+      stage: "preflight",  // preflight, calibration, setup, select, move
+      stage: "calibration",  // for development
       selectStage: "source", // source, target
       moveStage: "ready",   // ready, busy
       plates: obj,          // entries can be: empty, full, source, target
@@ -131,10 +132,6 @@ class System extends React.Component {
   handleButtonClick(entry) {
     const stage = this.state.stage
 
-    if (entry == "Move") {
-      this.changeStatusText("hello", 5000)
-    }
-
     switch(stage) {
       case "calibration":
         const plates = this.state.plates
@@ -142,11 +139,14 @@ class System extends React.Component {
         switch(entry) {
 
           case "Move":
-            console.log("Moving to " + target);
-            fetch("/move?target="+target)
-              .then(res => {
-                console.log(res)
-              })
+            fetch("/move?target="+target).then((response) => {
+              return response.json()
+            })
+            .then(responseJson => {
+              console.log(responseJson)
+              this.changeStatusText(responseJson, 500)
+            })
+            break;
 
           case "Save":
             console.log("Updated " + target + " with new coordinates. Written to calibration.json")
