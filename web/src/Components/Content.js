@@ -9,6 +9,9 @@ function Controls(props) {
         <ul id="calibrate" className="nav">
           {Array.isArray(props.buttons) && props.buttons.map( entry => {
             let className="btn btn-secondary" 
+            if (props.moving) {
+              className += " disabled"
+            }
             return (
               <li key={entry} className="nav-item">
                 <button 
@@ -46,7 +49,12 @@ function Information(props) {
 export default function Content(props) {
   return (
     <div className="container bg-light">
-      <Controls buttons={stageSpecificButtons[props.stage]} onButtonClick={props.onButtonClick} statusText={props.statusText}/>
+      <Controls 
+        moving={props.moving}
+        buttons={stageSpecificButtons[props.stage]} 
+        onButtonClick={props.onButtonClick} 
+        statusText={props.statusText}
+      />
       <Information stage={props.stage}/>
     </div>
   )

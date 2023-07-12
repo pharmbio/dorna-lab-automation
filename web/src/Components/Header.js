@@ -14,8 +14,8 @@ export default class Header extends React.Component {
       move:         "Press run to perform move.",
     };
 
-    let atFirst = this.props.stage === "preflight"
-    let atLast = this.props.stage === "move"
+    let atFirst = this.props.stage == "preflight"
+    let atLast = this.props.stage == "move"
 
     return (
       <div className="container bg-light">
@@ -44,7 +44,7 @@ export default class Header extends React.Component {
             </div>
           </div>
         </nav>
-        <div className="span text-center">
+        <div className="span text-center text-primary">
           {text[this.props.stage]}
         </div>
       </div>

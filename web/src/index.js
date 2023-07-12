@@ -21,50 +21,56 @@ class System extends React.Component {
       obj[key] = "empty"
     }
 
+    // This portrays the initial state of the system and possible state values
     this.state = {
-      stage: "preflight",  // preflight, calibration, setup, select, move
-      stage: "calibration",  // for development
-      selectStage: "source", // source, target
-      moveStage: "ready",   // ready, busy
-      plates: obj,          // entries can be: empty, full, source, target
+      stage: "preflight",     // preflight, calibration, setup, select, move
+      stage: "setup",         // for development
+      moving: false,          // true, false
+      plates: obj,            // entries can be: empty, full, source, target
       initial: structuredClone(obj), // copy
       statusText: ""
     }
   }
 
   changeStage(stage) {
-    let plates = this.state.plates;
-    let initial = this.state.initial;
+    let plates = structuredClone(this.state.plates);
+    let initial = structuredClone(this.state.initial);
 
+    // If current stage is setup, save plate configuration to state.initial
     if (this.state.stage === "setup") {
-      this.setState({initial: plates})
-      console.log(this.state.initial)
+      initial = structuredClone(plates);
     }
 
     switch(stage) {
       case "preflight":
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
-	})
+	});
         break;
       case "calibration":
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
-	})
+	});
         break;
       case "setup":
-        this.setState({plates: initial})
-        break;
+        plates = initial; break;
       case "select":
-        this.setState({selectStage: "source"})
+        plates = initial; break;
       case "move":
-        this.setState({selectStage: "ready"})
+        break;
     }
-    this.setState({stage: stage})
+    this.setState({ 
+      stage: stage, 
+      plates: plates, 
+      initial: initial
+    }) 
   }
 
-  changeStatusText(string, delay) {
-    setTimeout(() => this.setState({statusText: ""}), delay)
+  changeStatusText(string, duration) {
+    // If no duration is supplied, change status permanently
+    if (duration) {
+      setTimeout(() => this.setState({statusText: ""}), duration)
+    }
     this.setState({statusText: string})
   }
 
@@ -103,31 +109,60 @@ class System extends React.Component {
   }
 
   handlePlateClick(id) {
-    const plates = this.state.plates;
+    const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
+
+      // During calibrtion, only one plate can be selected at a time
       case "calibration": 
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
 	})
         plates[id] = "full"
 	break;
-      case "setup": plates[id] = plates[id] === "empty" ? "full" : "empty"; break;
-      case "source":
-        if (plates[id] === "full") {
-          plates[id] = "source";
-          this.setState({stage: "target"});
+
+      // During setup, plates should toggle state
+      case "setup": 
+        plates[id] = plates[id] == "empty" ? "full" : "empty"; 
+        break;
+
+      // When picking source and target, 
+      // states should toggle and only one source/target can be selected
+      case "select":
+        switch(plates[id]) {
+          case "full": 
+            Object.keys(plates).forEach(item => {
+              if (plates[item] == "source") {
+                plates[item] = "full";
+              }
+            })
+            plates[id] = "source";
+            break;
+          case "empty":
+            Object.keys(plates).forEach(item => {
+              if (plates[item] == "target") {
+                plates[item] = "empty";
+              }
+            })
+            plates[id] = "target";
+            break;
+          case "source":
+            plates[id] = "full"
+            break;
+          case "target":
+            plates[id] = "empty"
+            break;
         }
         break;
-      case "target":
-        if (plates[id] === "empty") {
-          plates[id] = "target";
-          this.setState({stage: "ready"});
-        }
+
+      // Plate interaction is disabled when ready for movement
+      case "move":
         break;
+
       default: break;
     }
     this.setState({plates: plates})
   }
+
 
   handleButtonClick(entry) {
     const stage = this.state.stage
@@ -194,6 +229,5 @@ class System extends React.Component {
 }
 
 // ========================================
-
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<System />);
