@@ -1,21 +1,46 @@
 import React from 'react';
 
+// List of stages to expose to user in Header component, order matters
+const headerStages = ["preflight", "calibration", "setup", "select", "move"]
+
+const simpleText = {
+  preflight:    "Go through preflight checklist and make sure each point is understood.",
+  calibration:  "Select a position, and MOVE to it. Make adjustments with GUI below and then SAVE to calibrate.",
+  setup:        "Select initial plate position.",
+  select:       "Select plate for pick up and target position.",
+  move:         "Press run to perform move.",
+};
+
 export default class Header extends React.Component {
+  headerInfo() {
+    switch(this.props.stage) {
+      case "preflight":
+        return simpleText["preflight"]
+      case "calibration":
+        let text = (
+          <span>
+            Select a position and <span className="text-primary">Move</span> to it. 
+            Make adjustments with GUI below and then <span className="text-secondary">Save</span> to calibrate.
+            Press <span className="text-danger">Reset</span> to delete calibration file.
+          </span>
+        )
+        return text;
+      case "setup":
+        return simpleText["setup"]
+      case "select":
+        return simpleText["select"]
+      case "move":
+        return simpleText["move"]
+      default: break;
+    }
+  }
+
   render() {
-
-    // List of stages to expose to user in Header component, order matters
-    const headerStages = ["preflight", "calibration", "setup", "select", "move"]
-
-    const text = {
-      preflight:    "Go through preflight checklist and make sure each point is understood.",
-      calibration:  "Use the Dorna GUI below to calibrate each position.",
-      setup:        "Select initial plate position.",
-      select:       "Select plate for pick up and target position.",
-      move:         "Press run to perform move.",
-    };
-
     let atFirst = this.props.stage == "preflight"
     let atLast = this.props.stage == "move"
+
+    let targetExists = Object.values(this.props.plates).includes("target");
+    let sourceExists = Object.values(this.props.plates).includes("source");
 
     return (
       <div className="container bg-light">
@@ -44,8 +69,8 @@ export default class Header extends React.Component {
             </div>
           </div>
         </nav>
-        <div className="span text-center text-primary">
-          {text[this.props.stage]}
+        <div className="span text-center">
+          {this.headerInfo(targetExists, sourceExists)}
         </div>
       </div>
     )

@@ -33,7 +33,7 @@ function Controls(props) {
 }
 
 const stageSpecificButtons = {
-  calibration: ["Move", "Save"],
+  calibration: ["Move", "Save", "Reset"],
   setup: [],
   select: [],
   move: [],

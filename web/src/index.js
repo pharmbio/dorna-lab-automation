@@ -203,6 +203,7 @@ class System extends React.Component {
         <div className="section">
           <Header
             stage={this.state.stage}
+            plates={this.state.plates}
             onHeaderClick={(stage) => this.handleHeaderClick(stage)}
             onPrevClick={() => this.handlePrevClick()}
             onNextClick={() => this.handleNextClick()}
