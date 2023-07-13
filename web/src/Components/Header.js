@@ -21,8 +21,8 @@ export default class Header extends React.Component {
         text = (
           <span>
             Select a position and <span className="text-primary">Move</span> to it. 
-            Make adjustments with GUI below and then <span className="text-secondary">Save</span> to calibrate.
-            Press <span className="text-danger">Reset</span> to delete calibration file.
+            Make adjustments below and then <span className="text-secondary">Save</span> to calibrate.
+            Press <span className="text-danger">Reset</span> remove calibration for selected position.
           </span>
         )
         return text;

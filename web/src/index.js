@@ -24,11 +24,11 @@ class System extends React.Component {
     // This portrays the initial state of the system and possible state values
     this.state = {
       stage: "preflight",     // preflight, calibration, setup, select, move
-      stage: "calibration",         // for development
-      moving: true,          // true, false
+      stage: "calibration",   // development overwrite
+      moving: false,          // true, false
       plates: obj,            // entries can be: empty, full, source, target
       initial: structuredClone(obj), // copy
-      statusText: "hello my name is"
+      statusText: ""
     }
   }
 
@@ -36,9 +36,14 @@ class System extends React.Component {
     let plates = structuredClone(this.state.plates);
     let initial = structuredClone(this.state.initial);
 
-    // If current stage is setup, save plate configuration to state.initial
-    if (this.state.stage === "setup") {
+    // If current stage is Setup, save plate configuration to state.initial
+    if (this.state.stage == "setup") {
       initial = structuredClone(plates);
+    }
+
+    // If current stage is Move, remove "Ready for move!" statusText
+    if (this.state.stage == "move") {
+      this.changeStatusText("")
     }
 
     switch(stage) {
@@ -57,13 +62,19 @@ class System extends React.Component {
       case "select":
         plates = initial; break;
       case "move":
-        let target = Object.keys(plates).find(key => plates[key] == "target");
         let source = Object.keys(plates).find(key => plates[key] == "source");
+        let target = Object.keys(plates).find(key => plates[key] == "target");
         let text = (
-          target || source ? "Missing" : "what the fuck"
+          !(source || target) ? "Missing both source and target" 
+          : !source ? "Missing source"
+          : !target ? "Missing target"
+          : null
         )
-        this.changeStatusText(text, 500)
-
+        if (text) {
+          this.changeStatusText(text, 3000)
+          return
+        }
+        this.changeStatusText("Ready for move!")
         break;
     }
     this.setState({ 
@@ -119,7 +130,7 @@ class System extends React.Component {
     const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
 
-      // During calibrtion, only one plate can be selected at a time
+      // During calibration, only one plate can be selected at a time
       case "calibration": 
         Object.keys(plates).forEach((item) => {
 	  plates[item] = "empty"
@@ -161,46 +172,51 @@ class System extends React.Component {
         }
         break;
 
-      // Plate interaction is disabled when ready for movement
-      case "move":
-        break;
-
+      // Plate interaction is disabled during Preflight and Move stages
       default: break;
     }
     this.setState({plates: plates})
   }
 
 
-  handleButtonClick(entry) {
-    const stage = this.state.stage
-
-    switch(stage) {
+  handleButtonClick(id) {
+    const plates = structuredClone(this.state.plates);
+    switch(this.state.stage) {
       case "calibration":
-        const plates = this.state.plates
         let target = Object.keys(plates).find(key => plates[key] === "full");
-        switch(entry) {
 
+        switch(id) {
           case "Move":
+            this.setState({moving: true, statusText: "moving"})
             fetch("/move?target="+target).then((response) => {
               return response.json()
             })
             .then(responseJson => {
               console.log(responseJson)
-              this.changeStatusText(responseJson, 500)
+              this.changeStatusText(responseJson, 3000)
+              this.setState({moving: false})
             })
             break;
 
           case "Save":
-            console.log("Updated " + target + " with new coordinates. Written to calibration.json")
-            fetch("/save?node="+target)
+            fetch("/save?node="+target).then((response) => {
+              return response.json()
+            })
+            .then(responseJson => {
+              console.log(responseJson)
+              this.changeStatusText(responseJson, 3000)
+            })
+            break;
+
+          case "Reset":
+            fetch("/reset?node="+target)
               .then(res => {
                 console.log(res)
               })
             break;
-
           default: break;
         }
-    
+      default: break;
     }
   }
 
@@ -227,7 +243,7 @@ class System extends React.Component {
         <div className="section">
           <Content 
             moving={this.state.moving}
-            stage={this.state.stage} 
+            stage={this.state.stage}
             onButtonClick={(id) => this.handleButtonClick(id)}
             statusText={this.state.statusText}
           />

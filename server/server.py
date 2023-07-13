@@ -4,6 +4,7 @@ from helper import *
 import networkx as nx
 import socket
 import json
+import time
 from json.decoder import JSONDecodeError
 from typing import Optional, Any, Tuple, Union
 from enum import Enum
@@ -170,24 +171,9 @@ def main():
             return jsonify("No Dorna adress"), HTTP_STATUS.NOT_FOUND
 
 
-    @app.get("/start_motors")
-    def start_motors()->Tuple[Response,int]:
-        if r.get_motor() == 0:
-            print("Powering on dorna motors")
-            r.set_motor(1)
-        return jsonify("Motors are: " + ("ON" if bool(r.get_motor()) else "OFF")), HTTP_STATUS.OK
-
-
-    @app.get("/stop_motors")
-    def stop_motors()->Tuple[Response,int]:
-        if r.get_motor() == 1:
-            print("Powering off dorna motors")
-            r.set_motor(0)
-        return jsonify("Motors are: " + ("ON" if bool(r.get_motor()) else "OFF")), HTTP_STATUS.OK
-
-
     @app.get("/move")
     def move()->Tuple[Response,int]:
+        time.sleep(4)
         source = request.args.get("source")
         target = request.args.get("target")
         
@@ -248,21 +234,6 @@ def main():
         return response, HTTP_STATUS.OK
 
 
-    @app.get("/testcalibration")
-    def testcalibration()->Tuple[Response,int]:
-        connected, response = verifyDornaConnection(ip, port)
-        if not connected:
-            return jsonify(response), HTTP_STATUS.NOT_FOUND
-
-        prepare(r)
-        status = r.jmove(rel=1, z=-10)
-        r.sleep(3)
-        status = r.jmove(rel=1, z=10)
-        response = jsonify("Calibration test", str(status))
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, HTTP_STATUS.OK
-
-
     @app.get("/poweroff")
     def poweroff()->Tuple[Response,int]:
         target = "safe"
@@ -287,12 +258,13 @@ def main():
     @app.get("/save")
     def save()->Tuple[Response,int]:
         node = request.args.get("node")
-        if not node:
+        if (node == "undefined"):
             return jsonify("No node specified for calibration..."), HTTP_STATUS.BAD_REQUEST
 
-        # connected, response = verifyDornaConnection(ip, port)
-        # if not connected:
-        #     return jsonify(response), HTTP_STATUS.NOT_FOUND
+        connected, response = verifyDornaConnection(ip, port)
+        if not connected:
+            return jsonify(response), HTTP_STATUS.NOT_FOUND
+
         x, y, z, a, b, *_ = r.get_all_pose()
         coordinates = [x, y, z, a, b]
 
@@ -319,26 +291,6 @@ def main():
             json.dump(data, outfile, indent=4)
 
         return jsonify("Updated " + node + " successfully: " + str(coordinates)), HTTP_STATUS.OK
-
-
-    @app.get("/calibrate")
-    def calibrate()->Tuple[Response,int]:
-        with open(calibrationfile, "r") as file:
-            try:
-                data = json.load(file)
-            except JSONDecodeError:
-                print(JSONDecodeError)
-                data = {}
-
-        for node in list(g.nodes):
-            print(node, g.nodes[node])
-            if data.get(node):
-                new = data[node][-1]
-                g.nodes[node]["coordinates"] = new
-                print("updated " + node)
-                # print(node, g.nodes[node])
-
-        return jsonify("Read calibration file and updated coordinates"), HTTP_STATUS.OK
 
 
     app.run(debug=False)

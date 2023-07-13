@@ -1,27 +1,10 @@
 import Preflight from './Components/Preflight'
 import Calibration from './Components/Calibration'
 
-  // Array.isArray(props.buttons) && props.buttons.map( entry => {
-  //   let className = "btn" + props.moving ? " disabled" : "";
-  //   return (
-  //     <li key={entry} className="nav-item">
-  //       <button 
-  //         id={entry}
-  //         type="button" 
-  //         className="btn"
-  //         onClick={() => props.onButtonClick(entry)}
-  //       >
-  //         {entry}
-  //       </button>
-  //     </li>
-  //   )
-  // })
-  
 // Array.isArray checks that buttons exist before rendering them
 function Buttons(props) {
   return (
     Array.isArray(props.buttons) && props.buttons.map( entry => {
-      console.log( props.moving ? " disabled" : "" )
       let className = "btn btn-secondary" + (props.moving ? " disabled" : "");
       return (
         <li key={entry} className="nav-item">
@@ -62,15 +45,18 @@ export default function Content(props) {
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse">
-            <ul className="navbar-nav col-5">
+            <ul className="navbar-nav col-3" id="Controls">
               <Buttons
                 moving={props.moving}
                 buttons={stageSpecificButtons[props.stage]} 
                 onButtonClick={props.onButtonClick} 
               />
             </ul>
-            <span className="navbar-text col-2 justify-content-center text-center">
-              {props.statusText}
+            <span className="navbar-text col-6 justify-content-center text-center">
+              {(props.statusText == "moving") 
+                ? <div className="spinner-border text-primary" role="status"></div> 
+                : props.statusText
+              }
             </span>
           </div>
         </div>

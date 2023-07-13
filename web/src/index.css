@@ -8,7 +8,7 @@ body {
 iframe {
   display: block;
   width: 100%;
-  height: calc(100vh - 340px);
+  height: calc(100vh - 324px);
 }
 .active {
   text-decoration: underline 2px;
@@ -27,14 +27,12 @@ h5 {
   margin: 0px;
 }
 iframe {
-  margin-top: -8px;
+  margin-top: -6px;
 }
 
 #Controls {
-  height: 45px;
-  margin-top: -8px;
+  margin-left: 12px;
 }
-
 #Move {
   background: var(--bs-blue)
 }
