@@ -11,7 +11,7 @@ export default function Calibration() {
       if (response.ok) {
         return response.json();
       }
-      setInfo("⚠️ No response from Python server, demo page")
+      setInfo("⛔ No response from Python server, demo page")
       setIp("lab.dorna.ai")
       throw new Error("No response from Python server");
     })
@@ -31,9 +31,9 @@ export default function Calibration() {
   return (
     <div>
       <iframe id="iframe" className="my-auto" src={"http://"+ip}></iframe>
-      <h4 className="text-center">
+      <h5 className="text-center">
         {info}
-      </h4>
+      </h5>
     </div>
   )
 }

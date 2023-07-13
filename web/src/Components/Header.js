@@ -5,19 +5,20 @@ const headerStages = ["preflight", "calibration", "setup", "select", "move"]
 
 const simpleText = {
   preflight:    "Go through preflight checklist and make sure each point is understood.",
-  calibration:  "Select a position, and MOVE to it. Make adjustments with GUI below and then SAVE to calibrate.",
-  setup:        "Select initial plate position.",
-  select:       "Select plate for pick up and target position.",
-  move:         "Press run to perform move.",
+  setup:        "Select initial plate position(s).",
 };
 
 export default class Header extends React.Component {
-  headerInfo() {
+  headerInfo(plates) {
+    let text = "";
+    let targetExists = Object.values(plates).includes("target");
+    let sourceExists = Object.values(plates).includes("source");
+
     switch(this.props.stage) {
       case "preflight":
         return simpleText["preflight"]
       case "calibration":
-        let text = (
+        text = (
           <span>
             Select a position and <span className="text-primary">Move</span> to it. 
             Make adjustments with GUI below and then <span className="text-secondary">Save</span> to calibrate.
@@ -28,9 +29,28 @@ export default class Header extends React.Component {
       case "setup":
         return simpleText["setup"]
       case "select":
-        return simpleText["select"]
+        text = (
+          <span>
+            { sourceExists && targetExists ? <span>Ready for move!</span> : <span>Select </span> }
+            { // Cool ternary to check if source exists
+              sourceExists 
+              ? <span></span>
+              : <span><span className="text-primary"> source</span> plate for pick up </span>
+            }
+            { sourceExists || targetExists 
+              ? <span></span>
+              : <span>and </span>
+            }
+            { // Cool ternary to check if source exists
+              targetExists 
+              ? <span></span>
+              : <span><span className="text-danger"> target</span> position</span>
+            }
+          </span>
+        )
+        return text;
       case "move":
-        return simpleText["move"]
+        return <span>Press <span className="text-success">Run </span> to perform move.</span>
       default: break;
     }
   }
@@ -38,9 +58,6 @@ export default class Header extends React.Component {
   render() {
     let atFirst = this.props.stage == "preflight"
     let atLast = this.props.stage == "move"
-
-    let targetExists = Object.values(this.props.plates).includes("target");
-    let sourceExists = Object.values(this.props.plates).includes("source");
 
     return (
       <div className="container bg-light">
@@ -70,7 +87,7 @@ export default class Header extends React.Component {
           </div>
         </nav>
         <div className="span text-center">
-          {this.headerInfo(targetExists, sourceExists)}
+          {this.headerInfo(this.props.plates)}
         </div>
       </div>
     )

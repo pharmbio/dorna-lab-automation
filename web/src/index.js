@@ -24,11 +24,11 @@ class System extends React.Component {
     // This portrays the initial state of the system and possible state values
     this.state = {
       stage: "preflight",     // preflight, calibration, setup, select, move
-      stage: "setup",         // for development
-      moving: false,          // true, false
+      stage: "calibration",         // for development
+      moving: true,          // true, false
       plates: obj,            // entries can be: empty, full, source, target
       initial: structuredClone(obj), // copy
-      statusText: ""
+      statusText: "hello my name is"
     }
   }
 
@@ -57,6 +57,13 @@ class System extends React.Component {
       case "select":
         plates = initial; break;
       case "move":
+        let target = Object.keys(plates).find(key => plates[key] == "target");
+        let source = Object.keys(plates).find(key => plates[key] == "source");
+        let text = (
+          target || source ? "Missing" : "what the fuck"
+        )
+        this.changeStatusText(text, 500)
+
         break;
     }
     this.setState({ 
@@ -170,7 +177,7 @@ class System extends React.Component {
     switch(stage) {
       case "calibration":
         const plates = this.state.plates
-        const target = Object.keys(plates).find(key => plates[key] === "full");
+        let target = Object.keys(plates).find(key => plates[key] === "full");
         switch(entry) {
 
           case "Move":
@@ -219,6 +226,7 @@ class System extends React.Component {
 
         <div className="section">
           <Content 
+            moving={this.state.moving}
             stage={this.state.stage} 
             onButtonClick={(id) => this.handleButtonClick(id)}
             statusText={this.state.statusText}

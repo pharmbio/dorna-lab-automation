@@ -22,9 +22,12 @@ iframe {
 .section {
   padding: 8px;
 }
-h4 {
+h5 {
   padding-top: 8px;
   margin: 0px;
+}
+iframe {
+  margin-top: -8px;
 }
 
 #Controls {
@@ -38,13 +41,8 @@ h4 {
 #Reset {
   background: var(--bs-red)
 }
-
-#calibrate {
-  margin-left: 12px;
-}
-
-.navbar-text {
-  margin-left: 12px;
+#Run {
+  background: var(--bs-success)
 }
 
 .btn {
@@ -54,13 +52,9 @@ h4 {
   border-radius: 3px;
 }
 
-.right {
-  float: right;
-}
 .map {
   text-align: center;
 }
-
 .position {
   background: var(--bs-gray-300);
   border: 0px solid;
@@ -72,7 +66,7 @@ h4 {
 }
 .position.full {
   color: var(--bs-white);
-  background: var(--bs-gray-600);
+  background: var(--bs-gray-700);
 }
 .position.source {
   color: var(--bs-white);
@@ -82,8 +76,11 @@ h4 {
   color: var(--bs-white);
   background: var(--bs-danger);
 }
-
 .position:hover {
   outline: none;
-  border: 2px solid #000;
+  border: 2px solid var(--bs-gray-500);
+}
+
+#Buttons {
+  height: 40px;
 }
