@@ -182,13 +182,17 @@ class System extends React.Component {
   handleButtonClick(id) {
     const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
-      case "calibration":
-        let target = Object.keys(plates).find(key => plates[key] === "full");
 
+
+      // During Calibratioon stage:
+      case "calibration":
+        let selected = Object.keys(plates).find(key => plates[key] === "full");
+
+        // Perform different things based on button identity:
         switch(id) {
           case "Move":
             this.setState({moving: true, statusText: "moving"})
-            fetch("/move?target="+target).then((response) => {
+            fetch("/move?target="+selected).then((response) => {
               return response.json()
             })
             .then(responseJson => {
@@ -199,7 +203,8 @@ class System extends React.Component {
             break;
 
           case "Save":
-            fetch("/save?node="+target).then((response) => {
+            this.setState({statusText: "loading"})
+            fetch("/save?node="+selected).then((response) => {
               return response.json()
             })
             .then(responseJson => {
@@ -209,13 +214,59 @@ class System extends React.Component {
             break;
 
           case "Reset":
-            fetch("/reset?node="+target)
-              .then(res => {
-                console.log(res)
-              })
+            this.setState({statusText: "loading"})
+            fetch("/reset?node="+selected).then((response) => {
+              return response.json()
+            })
+            .then(responseJson => {
+              console.log(responseJson)
+              this.changeStatusText(responseJson, 3000)
+            })
             break;
           default: break;
         }
+
+
+      // During Move stage:
+      case "move":
+        if (id == "Run") {
+          let source = Object.keys(plates).find(key => plates[key] === "source");
+          let target = Object.keys(plates).find(key => plates[key] === "target");
+
+          this.setState({moving: true, statusText: "moving"})
+
+          fetch("/move?target="+source).then((response) => {
+            return response.json()
+          }).then(responseJson => {
+            console.log(responseJson)
+            this.changeStatusText(responseJson, 3000)
+          })
+
+          fetch("/pickup").then((response) => {
+            return response.json()
+          }).then(responseJson => {
+            console.log(responseJson)
+            this.changeStatusText(responseJson, 3000)
+          })
+
+          fetch("/move?target="+target).then((response) => {
+            return response.json()
+          }).then(responseJson => {
+            console.log(responseJson)
+            this.changeStatusText(responseJson, 3000)
+          })
+
+          fetch("/place").then((response) => {
+            return response.json()
+          }).then(responseJson => {
+            console.log(responseJson)
+            this.changeStatusText(responseJson, 3000)
+            this.setState({moving: false})
+          })
+
+          break;
+        }
+        break;
       default: break;
     }
   }

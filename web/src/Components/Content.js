@@ -45,17 +45,17 @@ export default function Content(props) {
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse">
-            <ul className="navbar-nav col-3" id="Controls">
+            <ul className="navbar-nav col-4" id="Controls">
               <Buttons
                 moving={props.moving}
                 buttons={stageSpecificButtons[props.stage]} 
                 onButtonClick={props.onButtonClick} 
               />
             </ul>
-            <span className="navbar-text col-6 justify-content-center text-center">
-              {(props.statusText == "moving") 
-                ? <div className="spinner-border text-primary" role="status"></div> 
-                : props.statusText
+            <span className="navbar-text col-4 justify-content-center text-center">
+              {(props.statusText == "moving") ? <div className="spinner-border text-primary" role="status"></div> :
+                (props.statusText == "loading") ? <div className="spinner-border text-secondary" role="status"></div> :
+                props.statusText
               }
             </span>
           </div>

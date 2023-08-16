@@ -1,6 +1,6 @@
 from flask import Flask, request, Response, jsonify
 from dorna2 import Dorna
-from helper import *
+from gripperFunctions import *
 import networkx as nx
 import socket
 import json
@@ -38,7 +38,7 @@ def createGraph(hostname, file)->nx.Graph:
     with open (file, "r") as json_file:
         data = json.load(json_file)
         jnodes = data["joint nodes"]
-        lnodes = data["linear nodes"][hostname]
+        lnodes = data["linear nodes"]
         edges = data["edges"]
 
         for i in jnodes:
@@ -142,6 +142,7 @@ def main():
     except JSONDecodeError:
         print("Calibration file is empty, creating new entry: ", JSONDecodeError)
         data = {}
+    
 
     updated_nodes = []
 
@@ -173,7 +174,6 @@ def main():
 
     @app.get("/move")
     def move()->Tuple[Response,int]:
-        time.sleep(4)
         source = request.args.get("source")
         target = request.args.get("target")
         
@@ -198,7 +198,7 @@ def main():
 
         # Go through each node in the calculated path
         for node in path:
-            if goToNode(r, g, node)!=NodeMoveResult.SUCCESS:
+            if goToNode(r, g, node) != NodeMoveResult.SUCCESS:
                 return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR
 
         return jsonify("Moved through nodes " + str(path)), HTTP_STATUS.OK
@@ -258,8 +258,11 @@ def main():
     @app.get("/save")
     def save()->Tuple[Response,int]:
         node = request.args.get("node")
-        if (node == "undefined"):
+        if node is None:
             return jsonify("No node specified for calibration..."), HTTP_STATUS.BAD_REQUEST
+        if node not in g:
+            return jsonify("Specified Node does not exist"), HTTP_STATUS.BAD_REQUEST
+
 
         connected, response = verifyDornaConnection(ip, port)
         if not connected:
@@ -267,6 +270,10 @@ def main():
 
         x, y, z, a, b, *_ = r.get_all_pose()
         coordinates = [x, y, z, a, b]
+
+        closest = closestNode(r, g)
+        if (node != closest):
+            return jsonify(f"Too far from {node} to perform calibration, closest is {closest}"), HTTP_STATUS.BAD_REQUEST
 
         with open(calibrationfile, "r") as file:
             try:
@@ -292,6 +299,32 @@ def main():
 
         return jsonify("Updated " + node + " successfully: " + str(coordinates)), HTTP_STATUS.OK
 
+
+    @app.get("/reset")
+    def reset()->Tuple[Response,int]:
+        node = request.args.get("node")
+        print(node)
+        if node is None:
+            return jsonify("No node specified for reset..."), HTTP_STATUS.BAD_REQUEST
+
+        with open(calibrationfile, "r") as file:
+            try:
+                data = json.load(file)
+            except JSONDecodeError:
+                print(JSONDecodeError)
+                data = {}
+
+            #If node is not new
+            if data.get(node): 
+                del data[node]
+                print(f"Removed {node} from calibration.json")
+            else:
+                return jsonify("Node " + node + " already at default"), HTTP_STATUS.OK
+
+        with open(calibrationfile, "w") as outfile:
+            json.dump(data, outfile, indent=4)
+
+        return jsonify("Reset " + node + " to default coordinates"), HTTP_STATUS.OK
 
     app.run(debug=False)
 

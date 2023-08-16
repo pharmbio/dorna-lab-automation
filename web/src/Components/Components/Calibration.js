@@ -11,7 +11,7 @@ export default function Calibration() {
       if (response.ok) {
         return response.json();
       }
-      setInfo("⛔ No response from Python server, rendering demo page from lab.dorna.ai ⛔")
+      setInfo("Python server ⛔ Rendering demo page from lab.dorna.ai ")
       setIp("lab.dorna.ai")
       throw new Error("No response from Python server");
     })
@@ -20,7 +20,7 @@ export default function Calibration() {
         if (responseJson.connected) {
           setInfo("")
         } else {
-          setInfo("⛔ No connection to Dorna Control Box, rendering demo page from lab.dorna.ai ⛔")
+          setInfo("Python server ✅ Dorna Control Box ⛔ Rendering demo page from lab.dorna.ai")
         }
       })
     .catch((error) => {
