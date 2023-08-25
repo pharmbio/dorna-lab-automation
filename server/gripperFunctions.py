@@ -3,12 +3,12 @@ import json
 port = str(0)
 pwm, duty, freq = "pwm"+port, "duty"+port, "freq"+port
 
-calibrationfile = "../calibration.json"
+calibrationfile = "../gripperCalibration.json"
 
 # This function can be run between each pickup/place
 # to have the changes work in real-time
-def updateServoSettings(gripperFunction):
-    settings = {
+def updateServoSettings(move):
+    default = {
             "prepare": 9.5,
             "grip": 8.5,
             "release": 10,
@@ -17,15 +17,15 @@ def updateServoSettings(gripperFunction):
     try:
         file = open(calibrationfile, "r")
         data = json.load(file)
-        settings = data.get("servoSettings")
+        duty = data.get(move)
+        return duty 
     except FileNotFoundError:
         print("No calibration file found, using default values")
     except OSError as e:
         # Catch other errors, such as permissions etc.
         print(f"Unable to open {calibrationfile}: {e}")
 
-    print(settings[gripperFunction])
-    return settings[gripperFunction]
+    return default[move]
 
 # Prepare for microplate pickup
 def prepare(r):
