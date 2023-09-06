@@ -31,7 +31,7 @@ class HTTP_STATUS:
     NOT_IMPLEMENETED=501
     SERVICE_UNAVAILABLE=503
 
-def createGraph(hostname, file)->nx.Graph:
+def createGraph(file)->nx.Graph:
     g = nx.Graph()
     n, e = [], []
 
@@ -59,13 +59,45 @@ class NodeMoveResult(int,Enum):
     SUCCESS=0
     FAILURE=-1
 def goToNode(robot:Dorna, graph:nx.Graph, node:Any)->NodeMoveResult:
+    default = {
+            "vel": 25,
+            "accel": 500,
+            "jerk": 2500 
+    }
+    vel, accel, jerk = default["vel"], default["accel"], default["jerk"]
+
+    calibrationfile = "../parameters.json"
+
+    # Attempt reading file to overwrite default values:
+    try:
+        file = open(calibrationfile, "r")
+        data = json.load(file)
+        vel = data.get("vel")
+        accel = data.get("accel")
+        jerk = data.get("jerk")
+    except FileNotFoundError:
+        print("No calibration file found, using default values")
+    except OSError as e:
+        # Catch other errors, such as permissions etc.
+        print(f"Unable to open {calibrationfile}: {e}")
+    except KeyError as e:
+        print(f"Parameter not set in {calibrationfile}: {e}")
+
     if graph.nodes[node]["type"] == "joint":
         j0, j1, j2, j3, j4 = graph.nodes[node]["coordinates"]
-        robot.jmove(rel=0, j0=j0, j1=j1, j2=j2, j3=j3, j4=j4)
+        robot.jmove(
+                rel=0, 
+                j0=j0, j1=j1, j2=j2, j3=j3, j4=j4, 
+                vel=vel, accel=accel, jerk=jerk
+        )
         return NodeMoveResult.SUCCESS
     elif graph.nodes[node]["type"] == "linear":
         x, y, z, a, b = graph.nodes[node]["coordinates"]
-        robot.jmove(rel=0, x=x, y=y, z=z, a=a, b=b)
+        robot.jmove(
+                rel=0, 
+                x=x, y=y, z=z, a=a, b=b,
+                vel=vel, accel=accel, jerk=jerk
+        )
         return NodeMoveResult.SUCCESS
     else:
         print("Requested move to incorrect node...")
@@ -97,33 +129,11 @@ def closestNode(robot, graph:nx.Graph)->Optional[Any]:
         return closest
 
 
-def main():
-    configfile, graphfile, calibrationfile = "../config.json", "../graph.json", "../calibration.json"
+def main(robot):
+    graphfile, calibrationfile = "../graph.json", "../calibration.json"
+    g:nx.Graph = createGraph(graphfile)
 
-    # Read config file, retreive hostname and create graph structure
-    hostname = socket.gethostname()
-    g:nx.Graph = createGraph(hostname, graphfile)
-    with open(configfile) as json_file:
-        arg:dict = json.load(json_file)
-    try:
-        ip = arg[hostname]
-        print("Dorna Control Box IP adress = ", ip)
-    except Exception as hostname:
-        print("Failed to find IP adress for hostname =", hostname)
-        return
-    port = arg["port"]
-
-
-    # Establish connection with Dorna
-    r = Dorna()
-    def verifyDornaConnection(ip, port):
-        connected = r.connect(ip, port)
-        noConnectionResponse = "No connection to Dorna control box"
-        return connected, noConnectionResponse
-
-    connected, *_ = verifyDornaConnection(ip, port)
-    print("Dorna is " + ("connected" if connected else "not connected"))
-
+    print("Dorna control box is " + ("connected" if robot._connected else "not connected"))
 
     # Import previous calibration
     try:
@@ -143,7 +153,6 @@ def main():
         print("Calibration file is empty, creating new entry: ", JSONDecodeError)
         data = {}
     
-
     updated_nodes = []
 
     for node in list(g.nodes):
@@ -163,14 +172,20 @@ def main():
 
     @app.get("/get_dorna_ip")
     def get_dorna_ip()->Tuple[Response,int]:
-        connected, *_ = verifyDornaConnection(ip, port)
         if (ip):
             print("Sending IP adress: " + ip)
-            return jsonify(ip=ip, connected=connected), HTTP_STATUS.OK
+            return jsonify(ip=ip, connected=robot._connected), HTTP_STATUS.OK
         else:
             print("No Dorna IP adress for this hostname")
             return jsonify("No Dorna adress"), HTTP_STATUS.NOT_FOUND
 
+    @app.get("/connect")
+    def connect()->Tuple[Response,int]:
+        if not robot.connect(ip, arg["port"]):
+            print("Not connected")
+            main(robot)
+        else:
+            print("Connected")
 
     @app.get("/move")
     def move()->Tuple[Response,int]:
@@ -181,14 +196,15 @@ def main():
         if target not in g:
             return jsonify("No or faulty target selected"), HTTP_STATUS.BAD_REQUEST
 
-        # Check connection with dorna
-        connected, response = verifyDornaConnection(ip, port) 
-        if not connected:
-            return jsonify(response), HTTP_STATUS.INTERNAL_SERVER_ERROR
-            
+        if not robot._connected:
+            return jsonify("No connection to Dorna control box"), HTTP_STATUS.INTERNAL_SERVER_ERROR
+
+        if not robot.get_motor():
+            return jsonify("Motors are not turned on"), HTTP_STATUS.BAD_REQUEST
+
         # If no source node provided, find closest one
         if not source:
-            source = closestNode(r, g)
+            source = closestNode(robot, g)
             if source is None:
                 return jsonify("Too far from node to perform safe move"), HTTP_STATUS.BAD_REQUEST
 
@@ -198,7 +214,7 @@ def main():
 
         # Go through each node in the calculated path
         for node in path:
-            if goToNode(r, g, node) != NodeMoveResult.SUCCESS:
+            if goToNode(robot, g, node) != NodeMoveResult.SUCCESS:
                 return jsonify("Failed to move to node."), HTTP_STATUS.INTERNAL_SERVER_ERROR
 
         return jsonify("Moved through nodes " + str(path)), HTTP_STATUS.OK
@@ -206,14 +222,10 @@ def main():
 
     @app.get("/pickup")
     def pickup()->Tuple[Response,int]:
-        connected, response = verifyDornaConnection(ip, port)
-        if not connected:
-            return jsonify(response), HTTP_STATUS.NOT_FOUND
-
-        prepare(r)
-        status = r.jmove(rel=1, z=-20)
-        grip(r)
-        status = r.jmove(rel=1, z=20)
+        prepare(robot)
+        status = robot.jmove(rel=1, z=-20)
+        grip(robot)
+        status = robot.jmove(rel=1, z=20)
         response = jsonify("Picked up plate ", str(status))
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, HTTP_STATUS.OK
@@ -221,38 +233,13 @@ def main():
 
     @app.get("/place")
     def place()->Tuple[Response,int]:
-        connected, response = verifyDornaConnection(ip, port)
-        if not connected:
-            return jsonify(response), HTTP_STATUS.NOT_FOUND
-
-        status = r.jmove(rel=1, z=-20)
-        release(r)
-        status = r.jmove(rel=1, z=20)
-        prepare(r)
+        status = robot.jmove(rel=1, z=-20)
+        release(robot)
+        status = robot.jmove(rel=1, z=20)
+        prepare(robot)
         response = jsonify("Placed down plate ", str(status))
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, HTTP_STATUS.OK
-
-
-    @app.get("/poweroff")
-    def poweroff()->Tuple[Response,int]:
-        target = "safe"
-        source = closestNode(r, g)
-        if source is None:
-            return jsonify("Too far from node"), HTTP_STATUS.BAD_REQUEST
-        else:
-            if goToNode(r, g, source)!=NodeMoveResult.SUCCESS:
-                return jsonify("Failed to move to node"), HTTP_STATUS.BAD_REQUEST
-
-        path = nx.shortest_path(g, source=source, target=target)
-        print(f"Shortest path from {source} to {target} is: {path}")
-        for node in path:
-            if goToNode(r, g, node)!=NodeMoveResult.SUCCESS:
-                return jsonify("Failed to move to node"), HTTP_STATUS.BAD_REQUEST
-
-        r.set_motor(0)
-        r.close()
-        return jsonify("Robot turned off!"), HTTP_STATUS.OK
 
 
     @app.get("/save")
@@ -263,15 +250,10 @@ def main():
         if node not in g:
             return jsonify("Specified Node does not exist"), HTTP_STATUS.BAD_REQUEST
 
-
-        connected, response = verifyDornaConnection(ip, port)
-        if not connected:
-            return jsonify(response), HTTP_STATUS.NOT_FOUND
-
-        x, y, z, a, b, *_ = r.get_all_pose()
+        x, y, z, a, b, *_ = robot.get_all_pose()
         coordinates = [x, y, z, a, b]
 
-        closest = closestNode(r, g)
+        closest = closestNode(robot, g)
         if (node != closest):
             return jsonify(f"Too far from {node} to perform calibration, closest is {closest}"), HTTP_STATUS.BAD_REQUEST
 
@@ -329,4 +311,23 @@ def main():
     app.run(debug=False)
 
 if __name__ == "__main__":
-    main()
+    config_path = "../config.json"
+
+    with open(config_path) as json_file:
+        arg = json.load(json_file)
+    hostname = socket.gethostname()
+    try:
+        ip = arg[hostname]
+    except:
+        print(f"No ip address defined in '{config_path}' for your hostname '{hostname}'")
+        exit()
+
+    robot = Dorna()
+    print("Connecting...")
+    if not robot.connect(ip, arg["port"]):
+        print("Not connected")
+        main(robot)
+    else:
+        print("Connected")
+        main(robot)
+    robot.close()

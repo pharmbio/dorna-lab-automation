@@ -16,3 +16,9 @@ A flask server that communicates with the Dorna API
 Requirements are mainly NodeJS, the Dorna API and a few python packages.
 I suggest using `venv` to install both the API and packages, making the install portable and not disturbing any already existing libraries.
 
+
+## Usage
+
+
+
+## Calibration

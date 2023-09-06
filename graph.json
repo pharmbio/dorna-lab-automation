@@ -1,5 +1,5 @@
 {
-    "positions": ["f1", "f2", "f3", "m"],
+    "positions": ["f1", "f2", "f3", "m", "safe2"],
     "joint nodes": {
         "safe": [180, 180, -142, 135, 0],
         "safe2":[0, 180, -142, 135, 0],

@@ -3,7 +3,7 @@ import json
 port = str(0)
 pwm, duty, freq = "pwm"+port, "duty"+port, "freq"+port
 
-calibrationfile = "../gripperCalibration.json"
+calibrationfile = "../parameters.json"
 
 # This function can be run between each pickup/place
 # to have the changes work in real-time
