@@ -66,11 +66,11 @@ def goToNode(robot:Dorna, graph:nx.Graph, node:Any)->NodeMoveResult:
     }
     vel, accel, jerk = default["vel"], default["accel"], default["jerk"]
 
-    calibrationfile = "../parameters.json"
+    parameters = "../parameters.json"
 
     # Attempt reading file to overwrite default values:
     try:
-        file = open(calibrationfile, "r")
+        file = open(parameters, "r")
         data = json.load(file)
         vel = data.get("vel")
         accel = data.get("accel")
@@ -79,9 +79,9 @@ def goToNode(robot:Dorna, graph:nx.Graph, node:Any)->NodeMoveResult:
         print("No calibration file found, using default values")
     except OSError as e:
         # Catch other errors, such as permissions etc.
-        print(f"Unable to open {calibrationfile}: {e}")
+        print(f"Unable to open {parameters}: {e}")
     except KeyError as e:
-        print(f"Parameter not set in {calibrationfile}: {e}")
+        print(f"Parameter not set in {parameters}: {e}")
 
     if graph.nodes[node]["type"] == "joint":
         j0, j1, j2, j3, j4 = graph.nodes[node]["coordinates"]
@@ -132,6 +132,7 @@ def closestNode(robot, graph:nx.Graph)->Optional[Any]:
 def main(robot):
     graphfile, calibrationfile = "../graph.json", "../calibration.json"
     g:nx.Graph = createGraph(graphfile)
+    gstart = g.copy()
 
     print("Dorna control box is " + ("connected" if robot._connected else "not connected"))
 
@@ -253,7 +254,7 @@ def main(robot):
         x, y, z, a, b, *_ = robot.get_all_pose()
         coordinates = [x, y, z, a, b]
 
-        closest = closestNode(robot, g)
+        closest = closestNode(robot, gstart)
         if (node != closest):
             return jsonify(f"Too far from {node} to perform calibration, closest is {closest}"), HTTP_STATUS.BAD_REQUEST
 
@@ -264,7 +265,7 @@ def main(robot):
                 print(JSONDecodeError)
                 data = {}
 
-            #If node is new
+            #If node calibration is new
             if not data.get(node): 
                 data[node] = []
                 data[node].append(coordinates)
@@ -302,6 +303,10 @@ def main(robot):
                 print(f"Removed {node} from calibration.json")
             else:
                 return jsonify("Node " + node + " already at default"), HTTP_STATUS.OK
+
+        #Update current graph with original position
+        coordinates = gstart[node]["coordinates"]
+        g.nodes[node]["coordinates"] = coordinates
 
         with open(calibrationfile, "w") as outfile:
             json.dump(data, outfile, indent=4)
