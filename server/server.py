@@ -305,7 +305,7 @@ def main(robot):
                 return jsonify("Node " + node + " already at default"), HTTP_STATUS.OK
 
         #Update current graph with original position
-        coordinates = gstart[node]["coordinates"]
+        coordinates = gstart.nodes[node]["coordinates"]
         g.nodes[node]["coordinates"] = coordinates
 
         with open(calibrationfile, "w") as outfile:

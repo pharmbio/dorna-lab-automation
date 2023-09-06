@@ -1,4 +1,7 @@
 {
+    "vel":      50,
+    "accel":    500,
+    "jerk":     2500,
     "prepare":  9.5,
     "grip":     8.5,
     "release":  10,
