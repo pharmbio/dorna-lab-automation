@@ -49,13 +49,13 @@ class System extends React.Component {
     switch(stage) {
       case "preflight":
         Object.keys(plates).forEach((item) => {
-	  plates[item] = "empty"
-	});
+          plates[item] = "empty"
+        });
         break;
       case "calibration":
         Object.keys(plates).forEach((item) => {
-	  plates[item] = "empty"
-	});
+          plates[item] = "empty"
+        });
         break;
       case "setup":
         plates = initial; break;
@@ -129,14 +129,13 @@ class System extends React.Component {
   handlePlateClick(id) {
     const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
-
       // During calibration, only one plate can be selected at a time
       case "calibration": 
         Object.keys(plates).forEach((item) => {
-	  plates[item] = "empty"
-	})
+          plates[item] = "empty"
+        })
         plates[id] = "full"
-	break;
+  	    break;
 
       // During setup, plates should toggle state
       case "setup": 
@@ -179,7 +178,7 @@ class System extends React.Component {
   }
 
 
-  handleButtonClick(id) {
+  async handleButtonClick(id) {
     const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
 
@@ -235,28 +234,28 @@ class System extends React.Component {
 
           this.setState({moving: true, statusText: "moving"})
 
-          fetch("/move?target="+source).then((response) => {
+          await fetch("/move?target="+source).then((response) => {
             return response.json()
           }).then(responseJson => {
             console.log(responseJson)
             this.changeStatusText(responseJson, 3000)
           })
 
-          fetch("/pickup").then((response) => {
+          await fetch("/pickup").then((response) => {
             return response.json()
           }).then(responseJson => {
             console.log(responseJson)
             this.changeStatusText(responseJson, 3000)
           })
 
-          fetch("/move?target="+target).then((response) => {
+          await fetch("/move?target="+target).then((response) => {
             return response.json()
           }).then(responseJson => {
             console.log(responseJson)
             this.changeStatusText(responseJson, 3000)
           })
 
-          fetch("/place").then((response) => {
+          await fetch("/place").then((response) => {
             return response.json()
           }).then(responseJson => {
             console.log(responseJson)
