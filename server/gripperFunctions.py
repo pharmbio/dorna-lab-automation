@@ -44,7 +44,7 @@ def grip(r):
 
 # Release microplate
 def release(r):
-    duty = updateServoSettings("relase")
+    duty = updateServoSettings("release")
     kwargs = {"cmd": "pwm", "pwm": 1, "freq": 50, "duty": duty}
     status = r.play(**kwargs)
     r.sleep(0.5)
