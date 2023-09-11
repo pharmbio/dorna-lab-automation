@@ -30,14 +30,14 @@ def updateServoSettings(move):
 # Prepare for microplate pickup
 def prepare(r):
     duty = updateServoSettings("prepare")
-    kwargs = {"cmd": "pwm", "pwm": 1, "freq": 50, "duty": duty}
+    kwargs = {"cmd": "pwm", "pwm0": 1, "freq0": 50, "duty0": duty}
     status = r.play(**kwargs)
     return status
 
 # Grip microplate
 def grip(r):
     duty = updateServoSettings("grip")
-    kwargs = {"cmd": "pwm", "pwm": 1, "freq": 50, "duty": duty}
+    kwargs = {"cmd": "pwm", "pwm0": 1, "freq0": 50, "duty0": duty}
     status = r.play(**kwargs)
     r.sleep(0.5)
     return status
@@ -45,7 +45,7 @@ def grip(r):
 # Release microplate
 def release(r):
     duty = updateServoSettings("release")
-    kwargs = {"cmd": "pwm", "pwm": 1, "freq": 50, "duty": duty}
+    kwargs = {"cmd": "pwm", "pwm0": 1, "freq0": 50, "duty0": duty}
     status = r.play(**kwargs)
     r.sleep(0.5)
     return status
@@ -53,7 +53,7 @@ def release(r):
 # Fully open gripper
 def wide(r):
     duty = updateServoSettings("wide")
-    kwargs = {"cmd": "pwm", "pwm": 1, "freq": 50, "duty": duty}
+    kwargs = {"cmd": "pwm", "pwm0": 1, "freq0": 50, "duty0": duty}
     status = r.play(**kwargs)
     r.sleep(3)
     return status
