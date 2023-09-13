@@ -8,6 +8,29 @@ import Content from './Components/Content'
 
 import graph from './graph.json';
 
+const PlatePositionStatus={
+  empty: "empty",
+  full: "full",
+  target: "target",
+  source: "source"
+}
+
+const Stage={
+  preflight:"preflight",
+  calibration: "calibration",
+  setup:"setup",
+  move:"move",
+  select:"select"
+}
+
+/// stage-specific buttons
+const StageButton={
+  Move: "Move",
+  Run: "Run",
+  Save: "Save",
+  Reset: "Reset"
+}
+
 // SYSTEM STATE MACHINE:
 class System extends React.Component {
   constructor(props) {
@@ -18,15 +41,14 @@ class System extends React.Component {
     const obj = {};
 
     for (const key of positions) {
-      obj[key] = "empty"
+      obj[key] = PlatePositionStatus.empty
     }
 
     // This portrays the initial state of the system and possible state values
     this.state = {
-      stage: "preflight",     // preflight, calibration, setup, select, move
-      stage: "calibration",   // development overwrite
-      moving: false,          // true, false
-      plates: obj,            // entries can be: empty, full, source, target
+      stage: Stage.preflight,
+      moving: false,
+      plates: obj,
       initial: structuredClone(obj), // copy
       statusText: ""
     }
@@ -37,39 +59,43 @@ class System extends React.Component {
     let initial = structuredClone(this.state.initial);
 
     // If current stage is Setup, save plate configuration to state.initial
-    if (this.state.stage == "setup") {
+    if (this.state.stage == Stage.setup) {
       initial = structuredClone(plates);
     }
 
     // If current stage is Move, remove "Ready for move!" statusText
-    if (this.state.stage == "move") {
+    if (this.state.stage == Stage.move) {
       this.changeStatusText("")
     }
 
     switch(stage) {
-      case "preflight":
+      case Stage.preflight:
         Object.keys(plates).forEach((item) => {
-          plates[item] = "empty"
+          plates[item] = PlatePositionStatus.empty
         });
         break;
-      case "calibration":
+      case Stage.calibration:
         Object.keys(plates).forEach((item) => {
-          plates[item] = "empty"
+          plates[item] = PlatePositionStatus.empty
         });
         break;
-      case "setup":
+      case Stage.setup:
         plates = initial; break;
-      case "select":
+      case Stage.select:
         plates = initial; break;
-      case "move":
-        let source = Object.keys(plates).find(key => plates[key] == "source");
-        let target = Object.keys(plates).find(key => plates[key] == "target");
-        let text = (
-          !(source || target) ? "Missing both source and target" 
-          : !source ? "Missing source"
-          : !target ? "Missing target"
-          : null
-        )
+      case Stage.move:
+        let source = Object.keys(plates).find(key => plates[key] == PlatePositionStatus.source);
+        let target = Object.keys(plates).find(key => plates[key] == PlatePositionStatus.target);
+
+        var text = null
+        if (!(source || target)){
+          text="Missing both source and target" 
+        }else if (!source){
+          text="Missing source"
+        }else if(!target){
+          text="Missing target"
+        }
+
         if (text) {
           this.changeStatusText(text, 3000)
           return
@@ -98,81 +124,93 @@ class System extends React.Component {
 
   handlePrevClick() {
     switch(this.state.stage) {
-      case "preflight":
-        console.log("Already at first stage"); break;
-      case "calibration":
-        this.changeStage("preflight"); break;
-      case "setup":
-        this.changeStage("calibration"); break;
-      case "select":
-        this.changeStage("setup"); break;
-      case "move":
-        this.changeStage("select"); break;
+      case Stage.preflight:
+        break
+      case Stage.calibration:
+        this.changeStage(Stage.preflight)
+        break
+      case Stage.setup:
+        this.changeStage(Stage.calibration)
+        break
+      case Stage.select:
+        this.changeStage(Stage.setup)
+        break
+      case Stage.move:
+        this.changeStage(Stage.select)
+        break
     }
   }
 
   handleNextClick() {
     switch(this.state.stage) {
-      case "preflight":
-        this.changeStage("calibration"); break;
-      case "calibration":
-        this.changeStage("setup"); break;
-      case "setup":
-        this.changeStage("select"); break;
-      case "select":
-        this.changeStage("move"); break;
-      case "move":
-        console.log("Already at final stage"); break;
+      case Stage.preflight:
+        this.changeStage(Stage.calibration)
+        break
+      case Stage.calibration:
+        this.changeStage(Stage.setup)
+        break
+      case Stage.setup:
+        this.changeStage(Stage.select)
+        break
+      case Stage.select:
+        this.changeStage(Stage.move)
+        break
+      case Stage.move:
+        break
     }
   }
 
-  handlePlateClick(id) {
+  handlePlateClick(plate_id) {
     const plates = structuredClone(this.state.plates);
     switch(this.state.stage) {
       // During calibration, only one plate can be selected at a time
-      case "calibration": 
+      case Stage.calibration: 
         Object.keys(plates).forEach((item) => {
-          plates[item] = "empty"
+          plates[item] = PlatePositionStatus.empty
         })
-        plates[id] = "full"
-  	    break;
-
+        plates[plate_id] = PlatePositionStatus.full
+  	    break
+ 
       // During setup, plates should toggle state
-      case "setup": 
-        plates[id] = plates[id] == "empty" ? "full" : "empty"; 
-        break;
+      case Stage.setup: 
+        plates[plate_id] = plates[plate_id] == PlatePositionStatus.empty ? PlatePositionStatus.full : PlatePositionStatus.empty
+        break
 
       // When picking source and target, 
       // states should toggle and only one source/target can be selected
-      case "select":
-        switch(plates[id]) {
-          case "full": 
+      case Stage.select:
+        switch(plates[plate_id]) {
+          case PlatePositionStatus.full: 
             Object.keys(plates).forEach(item => {
-              if (plates[item] == "source") {
-                plates[item] = "full";
+              if (plates[item] == PlatePositionStatus.source) {
+                plates[item] = PlatePositionStatus.full
               }
             })
-            plates[id] = "source";
-            break;
-          case "empty":
+            plates[plate_id] = PlatePositionStatus.source
+            break
+
+          case PlatePositionStatus.empty:
             Object.keys(plates).forEach(item => {
-              if (plates[item] == "target") {
-                plates[item] = "empty";
+              if (plates[item] == PlatePositionStatus.target) {
+                plates[item] = PlatePositionStatus.empty
               }
             })
-            plates[id] = "target";
-            break;
-          case "source":
-            plates[id] = "full"
-            break;
-          case "target":
-            plates[id] = "empty"
-            break;
+            plates[plate_id] = PlatePositionStatus.target
+            break
+
+          case PlatePositionStatus.source:
+            plates[plate_id] = PlatePositionStatus.full
+            break
+
+          case PlatePositionStatus.target:
+            plates[plate_id] = PlatePositionStatus.empty
+            break
         }
-        break;
+        break
 
       // Plate interaction is disabled during Preflight and Move stages
-      default: break;
+      default:
+          break
     }
     this.setState({plates: plates})
   }
@@ -184,14 +222,14 @@ class System extends React.Component {
 
 
       // During Calibratioon stage:
-      case "calibration":
-        let selected = Object.keys(plates).find(key => plates[key] === "full");
+      case Stage.calibration:
+        let selected = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.full)
 
         // Perform different things based on button identity:
         switch(id) {
-          case "Move":
+          case StageButton.Move:
             this.setState({moving: true, statusText: "moving"})
-            fetch("/move?target="+selected).then((response) => {
+            await fetch("/move?target="+selected).then((response) => {
               return response.json()
             })
             .then(responseJson => {
@@ -199,38 +237,39 @@ class System extends React.Component {
               this.changeStatusText(responseJson, 3000)
               this.setState({moving: false})
             })
-            break;
+            break
 
-          case "Save":
+          case StageButton.Save:
             this.setState({statusText: "loading"})
-            fetch("/save?node="+selected).then((response) => {
+            await fetch("/save?node="+selected).then((response) => {
               return response.json()
             })
             .then(responseJson => {
               console.log(responseJson)
               this.changeStatusText(responseJson, 3000)
             })
-            break;
+            break
 
-          case "Reset":
+          case StageButton.Reset:
             this.setState({statusText: "loading"})
-            fetch("/reset?node="+selected).then((response) => {
+            await fetch("/reset?node="+selected).then((response) => {
               return response.json()
-            })
-            .then(responseJson => {
+            }).then(responseJson => {
               console.log(responseJson)
               this.changeStatusText(responseJson, 3000)
             })
-            break;
-          default: break;
+            break
+
+          default:
+            break
         }
 
 
       // During Move stage:
-      case "move":
-        if (id == "Run") {
-          let source = Object.keys(plates).find(key => plates[key] === "source");
-          let target = Object.keys(plates).find(key => plates[key] === "target");
+      case Stage.move:
+        if (id == StageButton.Run) {
+          let source = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.source)
+          let target = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.target)
 
           this.setState({moving: true, statusText: "moving"})
 
@@ -263,10 +302,15 @@ class System extends React.Component {
             this.setState({moving: false})
           })
 
-          break;
+          this.changeStage(Stage.select)
+
+          plates[target]=PlatePositionStatus.full
+          plates[source]=PlatePositionStatus.empty
+          this.setState({plates: plates})
         }
-        break;
-      default: break;
+        break
+      default:
+        break
     }
   }
 

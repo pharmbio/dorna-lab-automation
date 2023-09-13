@@ -58,6 +58,7 @@ def createGraph(file)->nx.Graph:
 class NodeMoveResult(int,Enum):
     SUCCESS=0
     FAILURE=-1
+    
 def goToNode(robot:Dorna, graph:nx.Graph, node:Any)->NodeMoveResult:
     default = {
             "vel": 25,
