@@ -2,8 +2,8 @@
     "vel":      50,
     "accel":    500,
     "jerk":     2500,
-    "prepare":  9.5,
+    "prepare":  11,
     "grip":     8.5,
-    "release":  10,
+    "release":  11,
     "wide":     12
 }
