@@ -3,7 +3,7 @@
     "accel":    500,
     "jerk":     2500,
     "prepare":  11,
-    "grip":     8.5,
+    "grip":     8.0,
     "release":  11,
     "wide":     12
 }
