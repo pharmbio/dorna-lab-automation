@@ -1,5 +1,30 @@
 {
-    "positions": ["f1", "f2", "f3", "m","safe"],
+    "positions": [{
+        "display_name":"F1",
+        "graph_node_name":"f1",
+        "can_be_calibrated":true,
+        "can_hold_plate":true
+    },{
+        "display_name":"F2",
+        "graph_node_name":"f2",
+        "can_be_calibrated":true,
+        "can_hold_plate":true
+    },{
+        "display_name":"F3",
+        "graph_node_name":"f3",
+        "can_be_calibrated":true,
+        "can_hold_plate":true
+    },{
+        "display_name":"SQUID",
+        "graph_node_name":"m",
+        "can_be_calibrated":true,
+        "can_hold_plate":true
+    },{
+        "display_name":"Home",
+        "graph_node_name":"safe",
+        "can_be_calibrated":false,
+        "can_hold_plate":false
+    }],
     "joint nodes": {
         "safe": [180, 180, -142, 135, 0],
         "safe2":[0, 180, -142, 135, 0],

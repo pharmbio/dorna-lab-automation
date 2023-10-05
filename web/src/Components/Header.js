@@ -1,11 +1,19 @@
 import React from 'react';
 
+import { Stage } from '../definitions'
+
 // List of stages to expose to user in Header component, order matters
-const headerStages = ["preflight", "calibration", "setup", "select", "move"]
+const headerStages = [
+  Stage.preflight, 
+  Stage.calibration, 
+  Stage.setup, 
+  Stage.select, 
+  Stage.move
+]
 
 const simpleText = {
-  preflight:    "Go through preflight checklist and make sure each point is understood.",
-  setup:        "Select initial plate position(s).",
+  [Stage.preflight]:    "Go through preflight checklist and make sure each point is understood.",
+  [Stage.setup]:        "Select initial plate position(s).",
 };
 
 export default class Header extends React.Component {
@@ -15,9 +23,10 @@ export default class Header extends React.Component {
     let sourceExists = Object.values(plates).includes("source");
 
     switch(this.props.stage) {
-      case "preflight":
-        return simpleText["preflight"]
-      case "calibration":
+      case Stage.preflight:
+        return simpleText[Stage.preflight]
+
+      case Stage.calibration:
         text = (
           <span>
             Select a position and <span className="text-primary">Move</span> to it. 
@@ -26,9 +35,11 @@ export default class Header extends React.Component {
           </span>
         )
         return text;
-      case "setup":
-        return simpleText["setup"]
-      case "select":
+
+      case Stage.setup:
+        return simpleText[Stage.setup]
+
+      case Stage.select:
         text = (
           <span>
             { sourceExists && targetExists ? <span>Ready for move!</span> : <span>Select </span> }
@@ -49,8 +60,10 @@ export default class Header extends React.Component {
           </span>
         )
         return text;
-      case "move":
+
+      case Stage.move:
         return <span>Press <span className="text-success">Run </span> to perform move.</span>
+
       default: break;
     }
   }

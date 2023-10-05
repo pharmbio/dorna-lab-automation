@@ -1,6 +1,16 @@
 import Preflight from './Components/Preflight'
 import Calibration from './Components/Calibration'
 
+/// stage-specific buttons
+export const StageButton={
+  Move: "Move",
+  Run: "Run",
+  Save: "Save",
+  Reset: "Reset",
+  PickUpPlate: "Grab Plate",
+  PutDownPlate: "Place Plate",
+}
+
 // Array.isArray checks that buttons exist before rendering them
 function Buttons(props) {
   return (
@@ -23,20 +33,30 @@ function Buttons(props) {
 }
 
 const stageSpecificButtons = {
-  calibration: ["Move", "Save", "Reset"],
+  calibration: [
+    StageButton.Save, 
+    StageButton.Move, 
+    StageButton.PickUpPlate,
+    StageButton.PutDownPlate,
+    StageButton.Reset,
+  ],
   setup: [],
   select: [],
-  move: ["Run"],
+  move: [
+    StageButton.Run
+  ],
 }
+
+import { Stage } from '../definitions'
 
 function Information(props) {
   switch(props.stage) {
-    case "preflight": return <Preflight/>;
+    case Stage.preflight: return <Preflight/>;
     default: return <Calibration />;
   }
 }
 
-export default function Content(props) {
+export function Content(props) {
   return (
     <div className="container bg-light">
       <nav className="navbar navbar-expand-md" id="Buttons">
@@ -45,14 +65,14 @@ export default function Content(props) {
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse">
-            <ul className="navbar-nav col-4" id="Controls">
+            <ul className="navbar-nav" id="Controls">
               <Buttons
                 moving={props.moving}
                 buttons={stageSpecificButtons[props.stage]} 
                 onButtonClick={props.onButtonClick} 
               />
             </ul>
-            <span className="navbar-text col-4 justify-content-center text-center">
+            <span className="navbar-text justify-content-center text-center" style={{display: "flex", width:"100%"}}>
               {(props.statusText == "moving") ? <div className="spinner-border text-primary" role="status"></div> :
                 (props.statusText == "loading") ? <div className="spinner-border text-secondary" role="status"></div> :
                 props.statusText

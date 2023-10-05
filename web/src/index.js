@@ -4,32 +4,35 @@ import './index.css';
 
 import Header from './Components/Header'
 import Positions from './Components/Positions'
-import Content from './Components/Content'
+import { Content, StageButton } from './Components/Content'
 
 import graph from './graph.json';
 
-const PlatePositionStatus={
-  empty: "empty",
-  full: "full",
-  target: "target",
-  source: "source"
+class GripperPosition{
+  constructor(pos) {
+    this.display_name=pos.display_name
+    this.graph_node_name=pos.graph_node_name
+    this.can_be_calibrated=pos.can_be_calibrated
+    this.can_hold_plate=pos.can_hold_plate
+  }
 }
 
-const Stage={
-  preflight:"preflight",
-  calibration: "calibration",
-  setup:"setup",
-  move:"move",
-  select:"select"
+const json_positions = graph.positions
+const positions=json_positions.map(function(p){
+  return new GripperPosition(p)
+})
+console.log(positions)
+
+function get_pos(display_name){
+  for(const i in positions){
+    if(positions[i].display_name==display_name){
+      return positions[i]
+    }
+  }
+  return null
 }
 
-/// stage-specific buttons
-const StageButton={
-  Move: "Move",
-  Run: "Run",
-  Save: "Save",
-  Reset: "Reset"
-}
+import { Stage, PlatePositionStatus } from './definitions'
 
 // SYSTEM STATE MACHINE:
 class System extends React.Component {
@@ -37,19 +40,18 @@ class System extends React.Component {
     super(props);
 
     // Collected from graph.json
-    const positions = graph.positions
-    const obj = {};
+    const plate_position_status = {};
 
     for (const key of positions) {
-      obj[key] = PlatePositionStatus.empty
+      plate_position_status[key.display_name] = PlatePositionStatus.empty
     }
 
     // This portrays the initial state of the system and possible state values
     this.state = {
       stage: Stage.preflight,
       moving: false,
-      plates: obj,
-      initial: structuredClone(obj), // copy
+      plates: plate_position_status,
+      initial: structuredClone(plate_position_status), // copy
       statusText: ""
     }
   }
@@ -215,12 +217,66 @@ class System extends React.Component {
     this.setState({plates: plates})
   }
 
+  /// locks interface to disallow further inputs
+  lock_interface(){
+    this.setState({moving: true, statusText: "moving"})
+  }
+  /// unlocks interface againxcsdf
+  unlock_interface(){
+    this.setState({moving: false})
+  }
+
+  /// main function that performs a move
+  /// locks ui to stop additional input while ongoing
+  async moveToPosition(target_position_name){
+    this.lock_interface()
+
+    const target_position=get_pos(target_position_name)
+    await fetch("/move?target="+target_position.graph_node_name).then((response) => {
+      return response.json()
+    })
+    .then(responseJson => {
+      console.log(responseJson)
+      this.changeStatusText(responseJson, 3000)
+    })
+
+    this.unlock_interface()
+  }
+
+  /// pickup plate at current position
+  /// locks ui to stop additional input while ongoing
+  async pickupPlateHere(){
+    this.lock_interface()
+
+    await fetch("/pickup").then((response) => {
+      return response.json()
+    }).then(responseJson => {
+      console.log(responseJson)
+      this.changeStatusText(responseJson, 3000)
+    })
+
+    this.unlock_interface()
+  }
+  /// place plate at current position
+  /// locks ui to stop additional input while ongoing
+  async placePlateHere(){
+    this.lock_interface()
+
+    await fetch("/place").then((response) => {
+      return response.json()
+    }).then(responseJson => {
+      console.log(responseJson)
+      this.changeStatusText(responseJson, 3000)
+    })
+
+    this.unlock_interface()
+  }
+
 
   async handleButtonClick(id) {
     const plates = structuredClone(this.state.plates);
+
     switch(this.state.stage) {
-
-
       // During Calibratioon stage:
       case Stage.calibration:
         let selected = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.full)
@@ -228,18 +284,15 @@ class System extends React.Component {
         // Perform different things based on button identity:
         switch(id) {
           case StageButton.Move:
-            this.setState({moving: true, statusText: "moving"})
-            await fetch("/move?target="+selected).then((response) => {
-              return response.json()
-            })
-            .then(responseJson => {
-              console.log(responseJson)
-              this.changeStatusText(responseJson, 3000)
-              this.setState({moving: false})
-            })
+            await this.moveToPosition(selected)
             break
 
           case StageButton.Save:
+            if(!get_pos(selected).can_be_calibrated){
+              window.alert("this position cannot be calibrated")
+              break
+            }
+
             this.setState({statusText: "loading"})
             await fetch("/save?node="+selected).then((response) => {
               return response.json()
@@ -260,6 +313,26 @@ class System extends React.Component {
             })
             break
 
+          case StageButton.PickUpPlate:
+            if(!get_pos(selected).can_hold_plate){
+              window.alert("this position cannot contain a plate")
+              break
+            }
+
+            await this.moveToPosition(selected)
+            await this.pickupPlateHere()
+            break
+
+          case StageButton.PutDownPlate:
+            if(!get_pos(selected).can_hold_plate){
+              window.alert("this position cannot contain a plate")
+              break
+            }
+
+            await this.moveToPosition(selected)
+            await this.placePlateHere()
+            break
+
           default:
             break
         }
@@ -268,44 +341,18 @@ class System extends React.Component {
       // During Move stage:
       case Stage.move:
         if (id == StageButton.Run) {
-          let source = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.source)
-          let target = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.target)
+          let source_display_name = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.source)
+          let target_display_name = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.target)
 
-          this.setState({moving: true, statusText: "moving"})
+          await this.moveToPosition(source_display_name)
+          await this.pickUpPlateHere()
+          await this.moveToPosition(target_display_name)
+          await this.placePlateHere()
 
-          await fetch("/move?target="+source).then((response) => {
-            return response.json()
-          }).then(responseJson => {
-            console.log(responseJson)
-            this.changeStatusText(responseJson, 3000)
-          })
-
-          await fetch("/pickup").then((response) => {
-            return response.json()
-          }).then(responseJson => {
-            console.log(responseJson)
-            this.changeStatusText(responseJson, 3000)
-          })
-
-          await fetch("/move?target="+target).then((response) => {
-            return response.json()
-          }).then(responseJson => {
-            console.log(responseJson)
-            this.changeStatusText(responseJson, 3000)
-          })
-
-          await fetch("/place").then((response) => {
-            return response.json()
-          }).then(responseJson => {
-            console.log(responseJson)
-            this.changeStatusText(responseJson, 3000)
-            this.setState({moving: false})
-          })
-
+          // automatically go back plate selection stage and set source as empty, and target as full
           this.changeStage(Stage.select)
-
-          plates[target]=PlatePositionStatus.full
-          plates[source]=PlatePositionStatus.empty
+          plates[target_display_name]=PlatePositionStatus.full
+          plates[source_display_name]=PlatePositionStatus.empty
           this.setState({plates: plates})
         }
         break
