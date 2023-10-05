@@ -7,7 +7,7 @@ export const StageButton={
   Run: "Run",
   Save: "Save",
   Reset: "Reset",
-  PickUpPlate: "Grab Plate",
+  PickUpPlate: "Pickup Plate",
   PutDownPlate: "Place Plate",
 }
 
