@@ -8,31 +8,7 @@ import { Content, StageButton } from './Components/Content'
 
 import graph from './graph.json';
 
-class GripperPosition{
-  constructor(pos) {
-    this.display_name=pos.display_name
-    this.graph_node_name=pos.graph_node_name
-    this.can_be_calibrated=pos.can_be_calibrated
-    this.can_hold_plate=pos.can_hold_plate
-  }
-}
-
-const json_positions = graph.positions
-const positions=json_positions.map(function(p){
-  return new GripperPosition(p)
-})
-console.log(positions)
-
-function get_pos(display_name){
-  for(const i in positions){
-    if(positions[i].display_name==display_name){
-      return positions[i]
-    }
-  }
-  return null
-}
-
-import { Stage, PlatePositionStatus } from './definitions'
+import { Stage, PlatePositionStatus, positions,get_pos } from './definitions'
 
 // SYSTEM STATE MACHINE:
 class System extends React.Component {
@@ -226,6 +202,25 @@ class System extends React.Component {
     this.setState({moving: false})
   }
 
+  async savePositionCalibration(target_position_name){
+    const target_position=get_pos(target_position_name)
+    await fetch("/save?node="+target_position.graph_node_name).then((response) => {
+      return response.json()
+    })
+    .then(responseJson => {
+      this.changeStatusText(responseJson, 3000)
+    })
+  }
+  async resetPositionCalibration(target_position_name){
+    const target_position=get_pos(target_position_name)
+    await fetch("/reset?node="+target_position.graph_node_name).then((response) => {
+      return response.json()
+    })
+    .then(responseJson => {
+      this.changeStatusText(responseJson, 3000)
+    })
+  }
+
   /// main function that performs a move
   /// locks ui to stop additional input while ongoing
   async moveToPosition(target_position_name){
@@ -294,23 +289,12 @@ class System extends React.Component {
             }
 
             this.setState({statusText: "loading"})
-            await fetch("/save?node="+selected).then((response) => {
-              return response.json()
-            })
-            .then(responseJson => {
-              console.log(responseJson)
-              this.changeStatusText(responseJson, 3000)
-            })
+            await this.savePositionCalibration(selected)
             break
 
           case StageButton.Reset:
             this.setState({statusText: "loading"})
-            await fetch("/reset?node="+selected).then((response) => {
-              return response.json()
-            }).then(responseJson => {
-              console.log(responseJson)
-              this.changeStatusText(responseJson, 3000)
-            })
+            await this.resetPositionCalibration(selected)
             break
 
           case StageButton.PickUpPlate:
@@ -337,6 +321,7 @@ class System extends React.Component {
             break
         }
 
+        break
 
       // During Move stage:
       case Stage.move:
@@ -345,7 +330,7 @@ class System extends React.Component {
           let target_display_name = Object.keys(plates).find(key => plates[key] === PlatePositionStatus.target)
 
           await this.moveToPosition(source_display_name)
-          await this.pickUpPlateHere()
+          await this.pickupPlateHere()
           await this.moveToPosition(target_display_name)
           await this.placePlateHere()
 
@@ -356,6 +341,7 @@ class System extends React.Component {
           this.setState({plates: plates})
         }
         break
+
       default:
         break
     }

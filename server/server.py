@@ -37,6 +37,7 @@ def createGraph(file)->nx.Graph:
 
     with open (file, "r") as json_file:
         data = json.load(json_file)
+
         jnodes = data["joint nodes"]
         lnodes = data["linear nodes"]
         edges = data["edges"]
@@ -61,9 +62,9 @@ class NodeMoveResult(int,Enum):
     
 def goToNode(robot:Dorna, graph:nx.Graph, node:Any)->NodeMoveResult:
     default = {
-            "vel": 25,
-            "accel": 500,
-            "jerk": 2500 
+        "vel": 25,
+        "accel": 500,
+        "jerk": 2500 
     }
     vel, accel, jerk = default["vel"], default["accel"], default["jerk"]
 
@@ -252,7 +253,11 @@ def main(robot):
         if node not in g:
             return jsonify("Specified Node does not exist"), HTTP_STATUS.BAD_REQUEST
 
-        x, y, z, a, b, *_ = robot.get_all_pose()
+        try:
+            x, y, z, a, b, *_ = robot.get_all_pose()
+        except KeyError as e:
+            raise RuntimeError(f"robot probably not turned on. found this exception {e}")
+
         coordinates = [x, y, z, a, b]
 
         closest = closestNode(robot, gstart)
