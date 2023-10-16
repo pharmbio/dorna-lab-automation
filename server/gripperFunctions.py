@@ -1,8 +1,10 @@
 import json
 import typing as tp
 from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
 
-calibrationfile = "../parameters.json"
+calibrationfile = Path("../parameters.json")
 
 DEFAULT_GRIPPER_DUTY = {
     "prepare": 9.5,
@@ -22,15 +24,10 @@ class GripperPreset:
 
         duty:float = DEFAULT_GRIPPER_DUTY[self.name]
 
-        try:
-            with open(calibrationfile, "r") as file:
-                data = json.load(file)
-                duty = data.get(self.name)
-        except FileNotFoundError:
-            print("No calibration file found, using default values")
-        except OSError as e:
-            # Catch other errors, such as permissions etc.
-            print(f"Unable to open {calibrationfile}: {e}")
+        if not calibrationfile.exists():
+            print(f"No calibration file found ({calibrationfile}), using default values")
+
+        with calibrationfile.open("r") as file: duty = json.load(file).get(self.name)
 
         return duty
 
@@ -47,11 +44,12 @@ class GripperPreset:
         return status
 
 
-# Prepare for microplate pickup
-prepare=GripperPreset("prepare")
-# Grip microplate
-grip=GripperPreset("grip")
-# Release microplate
-release=GripperPreset("release")
-# Fully open gripper
-wide=GripperPreset("wide",move_duration=3.0)
+class GripperWidth:#(GripperPreset,Enum) # <- throws 'AttributeError: can't set attribute' in enum_member.__init__ while instantiating this enum
+    # Prepare for microplate pickup
+    prepare=GripperPreset("prepare")
+    # Grip microplate
+    grip=GripperPreset("grip")
+    # Release microplate
+    release=GripperPreset("release")
+    # Fully open gripper
+    wide=GripperPreset("wide")
