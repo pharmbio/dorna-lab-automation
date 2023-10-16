@@ -293,6 +293,11 @@ class System extends React.Component {
             break
 
           case StageButton.Reset:
+            if(!get_pos(selected).can_be_calibrated){
+              window.alert("this position cannot be calibrated")
+              break
+            }
+            
             this.setState({statusText: "loading"})
             await this.resetPositionCalibration(selected)
             break
